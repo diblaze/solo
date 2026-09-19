@@ -25,4 +25,4 @@ Invoke `/solo:review <base>`. Fix all CRIT/WARN/CUT. No `ponytail:` marker survi
 No "cleanup"/"address review" commits. Amend the commit that introduced the code: `git commit --fixup <sha>` then `GIT_SEQUENCE_EDITOR=true git rebase -i --autosquash <base>` (interactive editor is stubbed, so this squashes non-interactively). Then verify: `git log --oneline <base>..HEAD` shows no `fixup!` lines. Single-commit branch → `git commit --amend --no-edit`.
 
 ## 4. Open
-`git push -u origin HEAD` then `gh pr create --fill --base <base>` (edit title/body to conventional-commit style if `--fill` is poor). Already-open PR → `git push --force-with-lease` instead. Print the PR URL.
+`git push -u origin HEAD` then `gh pr create --fill --base <base>` (edit title/body to conventional-commit style if `--fill` is poor). Body must carry `Closes #n` from the plan's `Issue:` line so merge closes the issue. Already-open PR → `git push --force-with-lease` instead. Print the PR URL.

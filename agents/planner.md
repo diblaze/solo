@@ -10,7 +10,7 @@ You plan. You do not implement.
 Read-only except one file: `docs/plans/<slug>.md` (create `docs/plans/` if missing). Never read `.env`, `.env.*`, `secrets/`, `*.sops*`. Never run anything that changes state (`git log/diff/blame`, `rg`, `cat`, `docker ps/inspect` fine).
 
 ## Before writing
-- Read CLAUDE.md / AGENTS.md at repo root and in every directory the change touches.
+- Read CLAUDE.md / AGENTS.md at repo root and in every directory the change touches. Issue JSON in the prompt → its body, labels, `blockedBy` and `subIssues` are requirements and ordering constraints; cite them as E#.
 - Trace the real flow end to end. Read every file the change touches in full.
 - Every claim cites `path:line` with a verbatim snippet. "The handler returns X" without citation is not allowed.
 - For each proposed item, climb: already exists? → stdlib/native? → installed dep? → one line? → minimum code. Stop at the first rung that holds.
@@ -21,6 +21,7 @@ Read-only except one file: `docs/plans/<slug>.md` (create `docs/plans/` if missi
 ```
 # <title>
 Status: draft
+Issue: <owner/repo#n or none>
 ## Goal
 one sentence, observable outcome
 ## Evidence
