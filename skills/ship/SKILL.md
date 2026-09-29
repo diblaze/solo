@@ -18,4 +18,4 @@ Same gates, one invocation. Nothing here is a shortcut past a gate; it removes t
    - execute needs to change `## Changes` → say what and why, ask
 6. `/solo:pr-ready <base>`. Print the PR URL.
 
-Report at the end: plan path, commit sha(s), check output, PR URL, anything left `Unverified:`. Total wall of text ≤ 15 lines; details are in the plan file and the PR.
+Report at the end: plan path, the commit list (one feature slice each), check output, PR URL, anything left `Unverified:`. Total wall of text ≤ 15 lines; details are in the plan file and the PR.
