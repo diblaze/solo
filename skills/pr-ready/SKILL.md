@@ -10,13 +10,7 @@ allowed-tools: Bash, Read, Edit, Write, Grep, Glob, Agent, AskUserQuestion
 Base = `$ARGUMENTS` or `main`. Must be on a non-`main` branch with commits ahead of base.
 
 ## 1. Slop pass (own code only)
-Scope = `git diff --name-only <base>...HEAD`. One pass per smell, safest first, re-run checks after each:
-- dead code, unused exports/imports, debug leftovers
-- duplicate logic → the existing helper
-- pass-through wrappers, single-impl interfaces, config for constants
-- comments restating code; docstrings on the obvious
-- tests that assert nothing, `test.skip`, `.only`, placeholder branches
-Preserve behavior. No new features. No new deps.
+Invoke `/solo:slop` — scope = `git diff --name-only <base>...HEAD`. Placeholder branches, bare `test.skip` and `.only` are blockers, not notes.
 
 ## 2. Review pass
 Invoke `/solo:review <base>`. Fix all CRIT/WARN/CUT. No `ponytail:` marker survives: implement the upgrade or delete the marker because the ceiling does not apply.

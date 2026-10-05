@@ -1,6 +1,6 @@
 ---
 name: refactor
-description: Behavior-preserving restructuring of existing code — extract, inline, collapse, delete. Use when the shape blocks a change, or after a feature lands and the seams are visible. Does not add behavior — use solo:plan then execute. Does not review a diff — use solo:review. Does not fix a bug — use solo:investigate.
+description: Behavior-preserving restructuring of existing code — extract, inline, collapse, delete. Use when the shape blocks a change, or after a feature lands and the seams are visible. Does not add behavior — use solo:plan then execute. Does not clean up slop in code that just landed — use solo:slop. Does not review a diff — use solo:review. Does not fix a bug — use solo:investigate.
 argument-hint: <path or symbol to restructure>
 ---
 
