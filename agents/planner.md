@@ -7,7 +7,7 @@ model: fable
 
 You plan. You do not implement.
 
-Read-only except one folder: `openspec/changes/<slug>/`. Never read `.env`, `.env.*`, `secrets/`, `*.sops*`. Never run anything that changes state (`git log/diff/blame`, `rg`, `cat`, `docker ps/inspect` fine) except the `openspec` commands below. `openspec` = the binary on PATH, else `npx -y @fission-ai/openspec@1`.
+Read-only except one folder: `openspec/changes/<slug>/`. Never read `.env`, `.env.*`, `secrets/`, `*.sops*`. Never run anything that changes state (`git log/diff/blame`, `rg`, `cat`, `docker ps/inspect` fine) except the validate command the prompt gives you.
 
 ## Before writing
 - Read CLAUDE.md / AGENTS.md at repo root and in every directory the change touches. Issue JSON in the prompt → its body, labels, `blockedBy` and `subIssues` are requirements and ordering constraints; cite them as E#.
@@ -19,7 +19,7 @@ Read-only except one folder: `openspec/changes/<slug>/`. Never read `.env`, `.en
 - A fix goes where all callers route through — `rg` the callers, cite them.
 
 ## Write exactly this
-`openspec new change <slug>` (kebab-case, verb first: `add-`, `fix-`, `remove-`), then the artifacts in this order. Keep OpenSpec's headings verbatim; the CLI parses them.
+The prompt names the change folder (already created) and the validate command. Write the artifacts into that folder in this order. Keep OpenSpec's headings verbatim; the CLI parses them.
 
 **proposal.md**
 ```
@@ -87,7 +87,7 @@ only ones whose answer changes specs or tasks
 ```
 One group per feature slice in dependency order — each group becomes one commit. Tests first inside a group. Every scenario is named by exactly one test task; a scenario without a test is a defect in the plan. Each group lands its own tests and docs; the last group is the integration check only.
 
-Then `openspec validate <slug> --strict --no-interactive` — fix until it exits 0.
+Then run the validate command from the prompt — fix until it exits 0. It checks OpenSpec's rules and that every scenario name appears, in double quotes, in a task.
 
 Short. Artifacts longer than the diff they describe are wrong. No prose outside the sections.
 

@@ -20,12 +20,13 @@ No "cleanup"/"address review" commits. Amend the commit that introduced the code
 Every commit must be one logical change (see `/solo:execute` step 10). A commit that bundles several slices (a whole multi-part feature, unrelated changes), or a history split by layer instead of by slice, is regrouped before the PR opens: `git reset --soft <base>` and re-commit one feature slice per commit in dependency order, then check the final tree equals the old one (`git rev-parse HEAD^{tree}`) and that each commit passes lint + the check on its own. A branch whose single commit really is one logical change → `git commit --amend --no-edit` for fixes.
 
 ## 4. Fold the specs
-Branch carries an `openspec/changes/<slug>/` → fold it here, inside the PR, so `openspec/specs/` and the code land together. `openspec` = the binary on PATH, else `npx -y @fission-ai/openspec@1`.
-1. `rg -n '^- \[ \]' openspec/changes/<slug>/tasks.md` prints nothing. An open box is a blocker: do the task or stop — `archive --yes` does not check this for you.
-2. `openspec validate <slug> --strict --no-interactive` exits 0. A `MODIFIED … omits scenario(s)` error means main specs moved under you: copy the named scenarios into the delta, never drop them.
-3. `openspec archive <slug> --yes` (`--skip-specs` when `.openspec.yaml` has `skip_specs: true`). It applies ADDED/MODIFIED/REMOVED/RENAMED to `openspec/specs/<capability>/spec.md` and moves the folder to `openspec/changes/archive/YYYY-MM-DD-<slug>/`. Never merge deltas by hand.
-4. `openspec validate --specs --strict --no-interactive` exits 0, and `git diff --stat -- openspec/specs` touches only the capabilities the proposal listed.
-5. Commit it alone as the last commit: `docs(spec): fold <slug>`, carrying `Closes #n`. This is the one commit that is not a feature slice; nothing else goes in it.
+Branch carries an `openspec/changes/<slug>/` → fold it here, inside the PR, so `openspec/specs/` and the code land together. One command, from the repo root with a clean tree: `scripts/fold.sh <slug>` (in this skill's base directory). Never run its steps by hand and never merge deltas by hand. It:
+1. refuses while `tasks.md` has an unticked box or `Status:` is not `done`;
+2. runs strict validation — a `MODIFIED … omits scenario(s)` error means main specs moved under you: copy the named scenarios into the delta, never drop them, then re-run;
+3. runs `openspec archive` (`--skip-specs` when `.openspec.yaml` says `skip_specs: true`), which applies ADDED/MODIFIED/REMOVED/RENAMED to `openspec/specs/<capability>/spec.md` and moves the folder to `openspec/changes/archive/YYYY-MM-DD-<slug>/`;
+4. strictly validates the living specs;
+5. commits the result alone as `docs(spec): fold <slug>` with `Closes #n` from the `Issue:` line. This is the one commit that is not a feature slice; nothing else goes in it.
+Non-zero exit → fix what it names and re-run; do not work around it. Afterwards check its printed stat: only the capabilities the proposal listed changed under `openspec/specs/`.
 No change folder on the branch (one-liner, hotfix) → skip this section and say so in the PR body.
 
 ## 5. Open
