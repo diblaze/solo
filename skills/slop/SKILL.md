@@ -9,7 +9,7 @@ argument-hint: [files or dir, default = branch diff vs main]
 Behavior stays identical. Scope = `$ARGUMENTS`, else `git diff --name-only <base>...HEAD` (empty → working tree diff). Never widen the scope on your own; slop seen outside it goes in the report, not the diff.
 
 ## 1. Lock behavior
-Find the check that covers the scope (plan's `## Check`, else the repo test command) and run it green before the first edit. Nothing covers it → write the narrowest characterization test first, or state the manual verification in one line. Behavior too unclear to lock → stop, say so.
+Find the check that covers the scope (the change's last task group in `openspec/changes/<slug>/tasks.md`, else the repo test command) and run it green before the first edit. Nothing covers it → write the narrowest characterization test first, or state the manual verification in one line. Behavior too unclear to lock → stop, say so.
 
 ## 2. List the smells, cite them
 One line each, `path:line`, grouped by class. No edit before the list exists.

@@ -9,13 +9,13 @@ argument-hint: <what to build or change> | #<issue>
 Same gates, one invocation. Nothing here is a shortcut past a gate; it removes the typing between them.
 
 1. `$ARGUMENTS` may be `#n` — plan reads the issue. Bug symptom rather than a change request → `/solo:investigate` first; its plan feeds step 2.
-2. `/solo:plan $ARGUMENTS`. The planner runs on Fable, once. Show path + 3-line summary + `## Open questions`.
-3. **Pause.** AskUserQuestion: approve / revise / drop. Open questions that change `## Changes` must be answered here; do not guess them. Revise → one SendMessage to the planner with the specific defect, then re-ask. Drop → stop, plan stays `draft`.
-4. On approve set `Status: approved`, then `/solo:execute <plan>`. That already branches, implements, runs the check, slop pass, `/solo:review`, and commits.
+2. `/solo:plan $ARGUMENTS`. The planner runs on Fable, once. Show the change path + 3-line summary + requirement names + `## Open Questions`.
+3. **Pause.** AskUserQuestion: approve / revise / drop. Open questions that change specs or tasks must be answered here; do not guess them. Revise → one SendMessage to the planner with the specific defect, then re-ask. Drop → stop, delete the change folder.
+4. On approve set `Status: approved`, then `/solo:execute <slug>`. That already branches, implements, runs the check, slop pass, `/solo:review`, and commits.
 5. Stop conditions inside execute — surface, do not push through:
    - check fails after the fix attempt → show output, ask
    - reviewer CRIT you cannot resolve → show it, ask
-   - execute needs to change `## Changes` → say what and why, ask
-6. `/solo:pr-ready <base>`. Print the PR URL.
+   - execute needs to change a requirement → say what and why, ask
+6. `/solo:pr-ready <base>` — folds the delta specs into `openspec/specs/`, archives the change, opens the PR. Print the PR URL.
 
-Report at the end: plan path, the commit list (one feature slice each), check output, PR URL, anything left `Unverified:`. Total wall of text ≤ 15 lines; details are in the plan file and the PR.
+Report at the end: archived change path, the commit list (one feature slice each), check output, PR URL, anything left `Unverified:`. Total wall of text ≤ 15 lines; details are in the archived change and the PR.

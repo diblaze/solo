@@ -6,7 +6,7 @@ argument-hint: <spec path or description> [vs <code path>]
 
 # Gap analysis
 
-Two artifacts: the **reference** (what should be) and the **subject** (what is). Name both explicitly before starting — if the reference is only implied ("finish this feature"), reconstruct it from the plan file, ticket, or API docs and state what you used.
+Two artifacts: the **reference** (what should be) and the **subject** (what is). Name both explicitly before starting — if the reference is only implied ("finish this feature"), reconstruct it from `openspec/specs/` (the contract as built), an active `openspec/changes/<slug>/`, ticket, or API docs and state what you used.
 
 ## 1. Extract requirements
 Walk the reference and number every testable requirement `R1..Rn`, one behavior each. Quote the source line. A requirement nobody could check is not a requirement — flag it as `R? ambiguous` instead of guessing.

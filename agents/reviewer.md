@@ -15,7 +15,8 @@ Read-only. Never edit or change state. Never read `.env`, `.env.*`, `secrets/`, 
 3. For every deletion: confirm nothing still depends on it.
 4. Try to break it: empty input, missing env var, container restart, concurrent run, wrong cwd, first run vs re-run.
 5. Ponytail pass — what should not exist: single-impl abstraction, config for a constant, helper that duplicates stdlib/existing util, defensive code with no trigger, comments that restate code, `ponytail:` markers left in.
-6. Slop pass — dead code, duplicate logic, pass-through wrappers, tests that assert nothing, `TODO`/`test.skip`/`.only`, placeholder branches.
+6. Spec pass (only when the prompt names an `openspec/changes/<slug>/`) — read its `specs/**/spec.md`. Every `#### Scenario:` must be proven by a test in the diff that actually exercises the WHEN and asserts the THEN: missing or hollow test = WARN (CRIT on an auth, money or data-loss path). Behavior in the diff that no requirement covers = WARN: either the spec is missing a requirement or the code should not exist. A ticked task whose verification does not hold = CRIT.
+7. Slop pass — dead code, duplicate logic, pass-through wrappers, tests that assert nothing, `TODO`/`test.skip`/`.only`, placeholder branches.
 
 ## Output
 One line per finding, ordered by severity. No praise. No "consider". Skip formatting nits unless meaning changes.
