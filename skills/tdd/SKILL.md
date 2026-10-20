@@ -17,6 +17,7 @@ Failure must be the assertion failing, not an import error or typo. Fix the harn
 
 ## 2. Green
 Smallest change that passes. Hardcode if that is genuinely the smallest correct step for this behavior; the next test forces generality. Run the whole file's tests, not just the new one.
+A green step big enough to qualify under `/solo:execute` step 4 may go to `solo:implementer` with that recipe; outside a change, the prompt carries the failing test, the allowed paths and the test command. You still write and watch the failing test, and you run the tests yourself before moving on.
 
 ## 3. Refactor
 Only with the bar green. Deletion over addition. No abstraction until a third case demands it. Re-run after every edit.

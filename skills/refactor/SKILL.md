@@ -24,6 +24,7 @@ Not targets: naming you dislike, formatting, "could be more elegant", file lengt
 ## 3. One move at a time
 Each step: one mechanical transform → run the tests → next. Never two transforms between green bars. Deletion counts as a move and is the best one.
 Prefer removing an abstraction over adding one. If the refactor grows a new layer, justify it in one line or drop it.
+A mechanical move big enough to qualify under `/solo:execute` step 4 (a rename across many files, say) may go to `solo:implementer` with that recipe; outside a change, the prompt carries the named move, the allowed paths and the test command. You still run the tests yourself between moves.
 
 ## 4. Verify
 Re-run the characterization tests plus the repo's own check. `git diff --stat` — a refactor that grew the line count needs a reason in the report.
