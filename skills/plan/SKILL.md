@@ -6,7 +6,7 @@ argument-hint: <what to build or change> | #<issue> | <issue url>
 
 # Plan
 
-Every CLI step is a script in this skill's `scripts/` folder (under the base directory shown when the skill loads); run those, never retype their commands. They use the global `openspec` binary when installed, else `npx -y @fission-ai/openspec@1`; exit 127 = neither available → stop and say so. Run them from the repo root.
+Every CLI step is a script in this skill's `scripts/` folder (under the base directory shown when the skill loads); run those, never retype their commands. They run OpenSpec 1.14.1: the global `openspec` binary at that exact version, else `npx -y @fission-ai/openspec@1.14.1`; exit 127 = neither available (or no `rg`) → stop and say so. They work from anywhere inside the repo.
 
 0. Issue first. `$ARGUMENTS` is `#n` or an issue URL → `gh issue view n --json url,title,body,labels,parent,blockedBy,subIssues`; that is the request. Otherwise the request is the prose, and an issue gets created at approval (step 4).
 1. Pick the slug (kebab-case, verb first: `add-`, `fix-`, `remove-`) and run `scripts/new-change.sh <slug>`. It initialises `openspec/` when the repo has none (rides in the change's first commit), creates the change and prints its path.

@@ -32,7 +32,7 @@ Insert or replace exactly one section in `AGENTS.md` (create the file with just 
 - Tests: `<runner>`, files `<pattern>`, next to source | in `tests/`. Public surface only; stubs at trust boundaries only. Conditional skips need a reason string; bare skip/`.only` is a blocker.
 - Style: <≤5 rules the tools cannot enforce — e.g. signals not services for state, table tests, no default exports, errors wrapped with context>
 - Language: code + commits English; docs <en|sv>.
-- Tracking: GitHub Issues. Labels `type:bug|feat|chore` (issue types are org-only). Deps via `--blocked-by`. Ready queue: `gh issue list --search '-is:blocked is:open'`. Commits close with `Closes #n`.
+- Tracking: GitHub Issues. Labels `type:bug|feat|chore` (issue types are org-only). Deps via `--blocked-by`. Ready queue: `gh issue list --search '-is:blocked is:open'`. The last slice commit carries `Refs owner/repo#n`; the spec-fold commit carries `Closes owner/repo#n`.
 - Don't: <≤3 repo-specific traps, each one line>
 ```
 ≤ 20 lines. Every line must be checkable by reading the repo or running the command; opinions without a check go in a `# ponytail:` comment or nowhere.
