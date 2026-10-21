@@ -21,7 +21,7 @@ Big repo → one `solo:explorer` dispatch per bullet, in parallel.
 One AskUserQuestion round, at most 4 questions, only where detection was ambiguous or the choice is a real preference: skip policy, test placement, strictness (typecheck in check?), language of docs. Everything detectable is stated, not asked.
 
 ## 3. Write
-Insert or replace exactly one section in `AGENTS.md` (create the file with just this section if missing; `CLAUDE.md` gets a one-line `@AGENTS.md` if it exists and does not already include it):
+Insert or replace exactly one section in `AGENTS.md` (create the file with just this section if missing). Claude Code loads `AGENTS.md` on its own, so add no `CLAUDE.md` pointer:
 
 ```markdown
 ## Coding standard

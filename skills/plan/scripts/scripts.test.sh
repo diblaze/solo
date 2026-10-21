@@ -105,13 +105,13 @@ rc=0; "$S/new-change.sh" z >/dev/null 2>&1 || rc=$?
 # Done without tasks.md refused
 newrepo "Done without tasks.md refused"
 mk w approved 'Issue: none'
-fails 1 "$S/set-status.sh" w done
+fails 1 "$S/set-status.sh" w "done"
 rg -q tasks.md "$tmp/err" || fail "stderr lacks tasks.md: $(cat "$tmp/err")"
 rg -qx 'Status: approved' openspec/changes/w/proposal.md || fail "status changed"
 
 # Fold without tasks.md refused
 newrepo "Fold without tasks.md refused"
-mk w done 'Issue: none'
+mk w "done" 'Issue: none'
 head="$(git rev-parse HEAD)"
 fails 1 "$FOLD" w
 rg -q tasks.md "$tmp/err" || fail "stderr lacks tasks.md: $(cat "$tmp/err")"
@@ -120,19 +120,19 @@ rg -q tasks.md "$tmp/err" || fail "stderr lacks tasks.md: $(cat "$tmp/err")"
 
 # Fold closes owner/repo issue
 newrepo "Fold closes owner/repo issue"
-mk f done 'Issue: o/r#12' tasks
+mk f "done" 'Issue: o/r#12' tasks
 fails 0 "$FOLD" f
 git log -1 --format=%B | rg -qF 'Closes o/r#12' || fail "fold commit: $(git log -1 --format=%B)"
 
 # Fold without issue
 newrepo "Fold without issue"
-mk g done 'Issue: none' tasks
+mk g "done" 'Issue: none' tasks
 fails 0 "$FOLD" g
 ! git log -1 --format=%B | rg -q Closes || fail "fold commit has Closes"
 
 # Fold refuses a malformed Issue line
 newrepo "Fold refuses a malformed Issue line"
-mk m done 'Issue: #12' tasks
+mk m "done" 'Issue: #12' tasks
 head="$(git rev-parse HEAD)"
 fails 1 "$FOLD" m
 rg -q 'Issue' "$tmp/err" || fail "stderr lacks Issue: $(cat "$tmp/err")"
@@ -141,7 +141,7 @@ rg -q 'Issue' "$tmp/err" || fail "stderr lacks Issue: $(cat "$tmp/err")"
 
 # Fold refuses a proposal without an Issue line
 newrepo "Fold refuses a malformed Issue line (missing)"
-mk n done '' tasks
+mk n "done" '' tasks
 fails 1 "$FOLD" n
 rg -q 'Issue' "$tmp/err" || fail "stderr lacks Issue: $(cat "$tmp/err")"
 
