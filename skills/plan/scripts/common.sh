@@ -1,9 +1,10 @@
+# shellcheck shell=bash
 # Sourced by every change script: needs rg, works from the git root, validates input.
 command -v rg >/dev/null 2>&1 || { echo "${0##*/}: ripgrep (rg) is required" >&2; exit 127; }
 # An inherited GIT_DIR (git rebase --exec in a worktree) makes --show-toplevel return the cwd.
 [ -n "${GIT_WORK_TREE:-}" ] || unset GIT_DIR
 root="$(git rev-parse --show-toplevel)"
-cd "$root"
+cd "$root" || exit
 ISSUE_RE='[A-Za-z0-9._-]+/[A-Za-z0-9._-]+#[0-9]+'
 # issue_of <proposal>: the owner/repo#n it names, nothing for none; refuses unless exactly one valid Issue: line.
 issue_of() {
