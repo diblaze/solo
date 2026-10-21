@@ -145,6 +145,14 @@ solo changed itself so that execute hands task groups to model-fit subagents:
 4. `/solo:pr-ready` ran `fold.sh`, which added `docs(spec): fold add-execute-subagent-dispatch` with `Closes`, and opened the PR.
 5. On the merge yes: rebase-merged, the four commits kept on `main`, the issue closed, the change archived.
 
+## Contributing
+
+Install the tools once: `go install github.com/evilmartians/lefthook/v2@v2.2.2`, `go install github.com/zricethezav/gitleaks/v8@v8.30.1`, plus `shellcheck` and `rg` from your package manager. Then run `lefthook install` in the clone.
+
+- **pre-commit**: `shellcheck` on staged scripts, the three test suites when scripts, skills or agents change, and `gitleaks` on the staged diff.
+- **pre-push**: `shellcheck` on every script, the test suites, and `gitleaks` over the history.
+- **CI** (`.github/workflows/ci.yml`) runs the same checks plus `actionlint` and `claude plugin validate --strict`. The coding standard is in [AGENTS.md](AGENTS.md).
+
 ## License
 
 MIT, see [LICENSE](LICENSE). Security reports: see [SECURITY.md](SECURITY.md).

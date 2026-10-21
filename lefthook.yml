@@ -1,0 +1,20 @@
+# Local checks. CI (.github/workflows/ci.yml) runs the same plus actionlint and manifest validation.
+pre-commit:
+  jobs:
+    - name: shellcheck
+      glob: "*.sh"
+      run: shellcheck -S warning {staged_files}
+    - name: tests
+      glob: ["*.sh", "skills/*/SKILL.md", "agents/*.md"]
+      run: bash skills/plan/scripts/scripts.test.sh && bash skills/pr-ready/scripts/open-pr.test.sh && bash tests/guards.test.sh
+    - name: gitleaks
+      run: gitleaks git --pre-commit --staged --redact --no-banner
+
+pre-push:
+  jobs:
+    - name: shellcheck
+      run: git ls-files -z '*.sh' | xargs -0 shellcheck -S warning
+    - name: tests
+      run: bash skills/plan/scripts/scripts.test.sh && bash skills/pr-ready/scripts/open-pr.test.sh && bash tests/guards.test.sh
+    - name: gitleaks
+      run: gitleaks git --redact --no-banner
