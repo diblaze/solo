@@ -53,27 +53,32 @@ The system SHALL, when the branch already has an open pull request, push with le
 - **THEN** the push uses force-with-lease, PR 7 gets the given base, title and body, gains the type label and loses any other `type:*` label, gains the opener as assignee, no new PR is created, and PR 7's URL is printed
 
 ### Requirement: Body closes the archived change's issue
-The system SHALL refuse to open the pull request when the branch adds an archived change whose `Issue:` line names an issue number and the body lacks `Closes #<n>`.
+The system SHALL refuse to open the pull request when the branch adds an archived change whose `Issue:` line names an issue `owner/repo#n` and the body lacks `Closes owner/repo#n`, or whose `Issue:` line is neither `owner/repo#n` nor `none`.
 
 #### Scenario: Body missing Closes
-- **GIVEN** the branch adds `openspec/changes/archive/*/proposal.md` with `Issue: owner/repo#12` and the body has no `Closes #12`
+- **GIVEN** the branch adds `openspec/changes/archive/*/proposal.md` with `Issue: owner/repo#12` and the body has no `Closes owner/repo#12`
 - **WHEN** the pull request is opened
-- **THEN** nothing is pushed or created and the error names `Closes #12`
+- **THEN** nothing is pushed or created and the error names `Closes owner/repo#12`
 
 #### Scenario: Body carries Closes
-- **GIVEN** the same archived change and a body containing `Closes #12`
+- **GIVEN** the same archived change and a body containing `Closes owner/repo#12`
 - **WHEN** the pull request is opened
 - **THEN** the PR is created
 
 #### Scenario: Closes of another issue does not count
-- **GIVEN** the branch adds an archived change with `Issue: owner/repo#1` and the body only has `Closes #12`
+- **GIVEN** the branch adds an archived change with `Issue: owner/repo#1` and the body only has `Closes owner/repo#12`
 - **WHEN** the pull request is opened
-- **THEN** nothing is pushed or created and the error names `Closes #1`
+- **THEN** nothing is pushed or created and the error names `Closes owner/repo#1`
 
 #### Scenario: Run from a subdirectory
 - **GIVEN** the same archived change with `Issue: owner/repo#12`, a body without it, and the script started from a subdirectory
 - **WHEN** the pull request is opened
 - **THEN** the check still runs and nothing is created
+
+#### Scenario: Malformed Issue line refused
+- **GIVEN** the branch adds an archived change with `Issue: #12`
+- **WHEN** the pull request is opened with any body
+- **THEN** nothing is pushed or created and the error names the `Issue:` line
 
 #### Scenario: Archived change without issue
 - **GIVEN** the branch adds an archived change with `Issue: none`
