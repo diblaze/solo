@@ -1,6 +1,6 @@
 ---
 name: docs
-description: Write or update documentation for a feature or system from codebase evidence — README, feature doc, API surface. Use when someone else (or future you) needs to use or change the thing. Does not record why a decision was made — use solo:adr. Does not write ops procedures — use homelab:runbook. Does not audit code against a spec — use solo:gap-analysis.
+description: Write or update documentation for a feature or system from codebase evidence — README, feature doc, API surface. Use when someone else (or future you) needs to use or change the thing. Does not record why a decision was made — use solo:adr. Does not audit code against a spec — use solo:gap-analysis.
 argument-hint: <feature, path, or doc to update>
 ---
 

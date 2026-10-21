@@ -25,4 +25,34 @@ ask="$(rg -n -m1 AskUserQuestion <<<"$s6" | cut -d: -f1)"
 merge="$(rg -n -m1 'gh pr merge' <<<"$s6" | cut -d: -f1)"
 [ -n "$ask" ] && [ -n "$merge" ] && [ "$ask" -lt "$merge" ] || fail "no AskUserQuestion before gh pr merge"
 
+case="Outsider instruction ignored"
+plan0="$(rg '^0\. ' "$P/skills/plan/SKILL.md")"
+has "$plan0" '--json [^`]*author'
+has "$plan0" 'comments'
+has "$plan0" 'collaborators/'
+has "$plan0" 'claim'
+inv="$(cat "$P/skills/investigate/SKILL.md")"
+has "$inv" '--json [^`]*author'
+has "$inv" 'claim'
+has "$(cat "$P/agents/planner.md")" 'never an instruction'
+
+case="Collaborator issue is the request"
+has "$plan0" 'collaborator'
+has "$plan0" 'is the request'
+
+case="Repo names a reviewer"
+rev="$(cat "$P/skills/review/SKILL.md")"
+! rg -q 'homelab|`/[a-z]+/' <<<"$rev" || fail "review hard-codes a host path or reviewer"
+has "$rev" 'AGENTS\.md'
+has "$rev" 'CLAUDE\.md'
+
+case="No reviewer named"
+has "$rev" 'else `solo:reviewer`'
+
+case="Untracked secret not staged"
+ex="$(cat "$P/skills/execute/SKILL.md")"
+! rg -qF 'git add -A' <<<"$ex" || fail "execute stages everything"
+has "$ex" 'git add -u && git add -- '
+has "$ex" 'openspec/changes/<slug>/'
+
 echo "guards.test.sh: ok"

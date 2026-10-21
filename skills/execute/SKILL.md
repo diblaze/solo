@@ -20,9 +20,9 @@ argument-hint: <change slug or path>
    | everything else: ambiguous, cross-cutting, auth/money/data-loss paths, integration; and every verification, tick, slop pass, review dispatch, commit, set-status | main thread (opus), which writes code too |
 
    Fable only after the user approves it: the request asks to run on Fable, or AskUserQuestion gets a yes; then dispatch `solo:implementer` with `model: "fable"`. No yes, no Fable. One group at a time, in this tree:
-   1. Index must be empty (`git diff --cached --quiet`); something staged → stop and ask. Group has a test task → write the test yourself and watch it fail. Then `git add -A`, so the implementer's edits are the only unstaged changes.
+   1. Index must be empty (`git diff --cached --quiet`); something staged → stop and ask. Group has a test task → write the test yourself and watch it fail. Record `git status --porcelain`, then `git add -u && git add -- <the group's allowed paths that exist> <test files you wrote for this group> openspec/changes/<slug>/`, so every tracked edit and your own new files are staged and the implementer's edits are the only unstaged changes; untracked files outside those paths (a stray secrets file) stay unstaged.
    2. Dispatch `solo:implementer` with: the group's tasks verbatim, the scenarios they prove, the design E# lines naming the paths, the `## Coding standard`, the verification command, and the allowed-path list.
-   3. On return, read `git diff` and `git status --short` (its edits only; anything outside the allowed paths is a defect), run the verification yourself, tick, then `git reset -q` to unstage.
+   3. On return, read `git diff` and `git status --short` and compare them with the recorded status (its edits only; anything new outside the allowed paths is a defect), run the verification yourself, tick, then `git reset -q` to unstage.
 
    `blocked`, a spec mismatch, or a failed verification → `git reset -q`, then do the group inline; never re-dispatch with a looser spec.
 5. Ponytail rules stay on: shortest diff that is correct, reuse over write, no unrequested abstractions. Deliberate ceilings get a `# ponytail: <ceiling>, <upgrade path>` comment. Framework/API questions → Context7, not memory.

@@ -7,7 +7,7 @@ model: opus
 
 You review one diff. Posture: adversarial. The author is competent and still wrong somewhere; find where.
 
-Read-only. Never edit or change state. Never read `.env`, `.env.*`, `secrets/`, `*.sops*`.
+Read-only. Never edit or change state. Never read `.env`, `.env.*`, `secrets/`, `*.sops*`, `keys.txt`, `auth.json`.
 
 ## Procedure
 1. `git diff <base>...HEAD` (base given in prompt; default `main`). Read every hunk. Then read each touched file in full — hunks lie about context.
