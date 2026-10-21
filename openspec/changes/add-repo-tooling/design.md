@@ -29,7 +29,7 @@
 - No private string ships in the repo, including in the privacy check itself.
 
 **Non-Goals:**
-- Personal-name/domain sweep in CI (repo secret holding the denylist) — reopen when a leak lands through a path that skips local hooks (web UI edit, another machine).
+- Any personal-name or domain check, local or in CI — dropped by the owner 2026-10-22.
 - Scanning PR and issue text — reopen when open-pr bodies leak private strings; would belong in `open-pr.sh`.
 - Email patterns — gitleaks scans patches, not commit metadata, and the history uses a noreply address; reopen if author metadata needs checking.
 - Bumping docker-image digests automatically (Dependabot github-actions ignores `docker run` lines) — reopen when Renovate or Dependabot covers them.
@@ -38,8 +38,8 @@
 ## Decisions
 - Fix E1–E3 in the source (directive line, `cd "$root" || exit`, quote `"done"`) and run shellcheck at `-S warning` everywhere; E4 infos are deliberate idioms. Lost: `.shellcheckrc` with disables (more lines, same effect). E1–E4.
 - `skip_specs: true`, no `specs/`: nothing an installer, user or API client observes changes. E19.
-- Privacy split: CI and hooks share `.gitleaks.toml` (`[extend] useDefault = true` plus rules `private-ipv4` = `\b(?:10\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01])|192\.168|100\.(?:6[4-9]|[7-9]\d|1[01]\d|12[0-7]))\.\d{1,3}\.\d{1,3}\b` and `home-path` = `/((?:home|Users)/[A-Za-z][\w.-]*)/` with `secretGroup = 1`, because the default global allowlist skips any secret that starts with `/home/` or `/Users/` — found in execute: the slash-led form never fired with `useDefault`). Names and domains go in an untracked `$(git rev-parse --git-common-dir)/info/privacy-denylist` (one term per line), checked by the pre-push hook over `git log -p origin/main..HEAD`, so messages and diffs are covered and no `.gitignore` entry is needed. Lost: repo-secret denylist in CI (absent on fork PRs, risks echoing matches into public logs). E14, E15.
-- Hooks (`lefthook.yml`, `jobs:` lists): pre-commit `shellcheck -S warning {staged_files}` glob `*.sh`; tests glob `["*.sh", "skills/*/SKILL.md", "agents/*.md"]` running the three suites; `gitleaks git --pre-commit --staged --redact --no-banner`. Pre-push: shellcheck on all `git ls-files '*.sh'`, the suites, `gitleaks git --redact --no-banner`, the denylist job skipped when the file is empty or absent. E5, E8, E16.
+- Privacy split: CI and hooks share `.gitleaks.toml` (`[extend] useDefault = true` plus rules `private-ipv4` = `\b(?:10\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01])|192\.168|100\.(?:6[4-9]|[7-9]\d|1[01]\d|12[0-7]))\.\d{1,3}\.\d{1,3}\b` and `home-path` = `/((?:home|Users)/[A-Za-z][\w.-]*)/` with `secretGroup = 1`, because the default global allowlist skips any secret that starts with `/home/` or `/Users/` — found in execute: the slash-led form never fired with `useDefault`). No name or domain denylist: the owner dropped it on 2026-10-22 (review showed lefthook skips pre-push jobs when a push changes no files, so a message-only push slipped past it); keeping personal details out of public text stays a manual rule. E14, E15.
+- Hooks (`lefthook.yml`, `jobs:` lists): pre-commit `shellcheck -S warning {staged_files}` glob `*.sh`; tests glob `["*.sh", "skills/*/SKILL.md", "agents/*.md"]` running the three suites; `gitleaks git --pre-commit --staged --redact --no-banner`. Pre-push: shellcheck on all `git ls-files '*.sh'`, the suites, `gitleaks git --redact --no-banner`. E5, E8, E16.
 - CI: one job `check` on `ubuntu-24.04` (not `-latest`, E10); `actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1` with `fetch-depth: 0`, `persist-credentials: false`; `apt-get install ripgrep` (E6, E10); actionlint and gitleaks via `docker run` on the digests in E12/E13 with `# vX.Y.Z` comments — no gitleaks-action (wants `pull-requests: write`, scans only the pushed range). Runner's shellcheck 0.9.0 is accepted. Workflow `permissions: contents: read`; `concurrency: {group: ci-${{ github.ref }}, cancel-in-progress: true}`.
 - Manifest validation in CI: `npx -y @anthropic-ai/claude-code@2.1.306 plugin validate --strict` on `.` and `.claude-plugin/plugin.json` — works without login (E17); a broken manifest breaks every installer.
 - Dependabot: `github-actions`, `directory: /`, weekly, `commit-message.prefix: chore(deps)` (conventional commits).
@@ -51,7 +51,7 @@
 - Docker digests and the npx version go stale silently (Non-Goal above).
 - Runner shellcheck 0.9.0 vs local 0.10.0 may disagree on a future warning.
 - `npx @anthropic-ai/claude-code` in CI unverified on the runner (E17 is local only); first CI run proves it.
-- The denylist only guards machines that have it; web UI commits skip it.
+- Names, domains and hosts are not checked by any tool; only private IPs and home paths are.
 - Required status checks block direct pushes to `main` for anyone without bypass.
 
 ## Open Questions

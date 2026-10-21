@@ -1,6 +1,6 @@
 # Proposal
 
-Status: approved
+Status: done
 Issue: diblaze/solo#3
 
 ## Why
@@ -9,7 +9,7 @@ The repo is public and has no CI, no hooks and no dependency updates: a broken s
 ## What Changes
 - shellcheck-clean scripts at warning severity (no behavior change)
 - `.gitleaks.toml`: default secret rules plus two generic privacy rules (private/CGNAT IPv4, absolute home-directory paths); no names, domains or hosts in it
-- `lefthook.yml`: pre-commit runs shellcheck on staged `*.sh`, the three test suites when scripts, skills or agents change, gitleaks on staged changes; pre-push runs shellcheck, the suites, gitleaks over history and an optional local denylist kept in `.git/info/`
+- `lefthook.yml`: pre-commit runs shellcheck on staged `*.sh`, the three test suites when scripts, skills or agents change, gitleaks on staged changes; pre-push runs shellcheck, the suites, gitleaks over history
 - `.github/workflows/ci.yml` on push/PR to `main`: actionlint, shellcheck, the three suites, gitleaks over full history, plugin manifest validation; SHA/digest-pinned, `contents: read`, concurrency cancel
 - `.github/dependabot.yml`: weekly github-actions updates, `chore(deps)` prefix
 - README `## Contributing` and an `AGENTS.md` `## Coding standard`
