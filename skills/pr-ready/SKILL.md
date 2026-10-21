@@ -2,7 +2,6 @@
 name: pr-ready
 description: Pre-PR gate — slop pass, reviewer pass, fix every finding, fold fixes into existing commits, fold the change's delta specs into openspec/specs/ and archive it, then open the PR (merged by rebase, never squash). Use whenever a branch is about to become a PR, or when a PR was opened without this pass. Does not plan or implement features.
 argument-hint: [base branch, default main]
-allowed-tools: Bash, Read, Edit, Write, Grep, Glob, Agent, AskUserQuestion
 ---
 
 # PR ready
@@ -31,7 +30,8 @@ No change folder on the branch (one-liner, hotfix) → skip this section and say
 
 ## 5. Open
 More than about five slices → stacked PRs instead of one: a branch per group of slices, each based on the previous one (pass the previous branch as `<base>`), so each PR stays reviewable on its own.
-Write the body to a file outside the repo (the tree must stay clean). The body lists the requirements added, modified and removed per capability (or says there was no change folder). When the plan names an issue (`/solo:plan #n`, or the `Issue:` line of the archived `proposal.md`), the body also carries `Closes owner/repo#n` so merge closes it; no issue, no `Closes`. Then one command, from the repo root: `scripts/open-pr.sh <base> --title "<type(scope): subject>" --body-file <file>` (in this skill's base directory). It derives the `type:feat|bug|chore` label from the commit subjects, creates the label when the repo lacks it, pushes, opens the PR assigned to `@me`, or force-with-lease pushes and updates the branch's already-open PR, and refuses a body missing the `Closes owner/repo#n` of an archived `proposal.md`. `--dry-run` prints the push and `gh` writes instead of running them. Never run its steps by hand. Print the URL it returns.
+Write the body to a file outside the repo (the tree must stay clean). The body lists the requirements added, modified and removed per capability (or says there was no change folder). When the plan names an issue (`/solo:plan #n`, or the `Issue:` line of the archived `proposal.md`), the body also carries `Closes owner/repo#n` so merge closes it; no issue, no `Closes`. Then run `scripts/open-pr.sh <base> --title "<type(scope): subject>" --body-file <file> --dry-run` (in this skill's base directory) and show its output: the pushes and `gh` writes it would make. AskUserQuestion: push and open / stop. Run the same command without `--dry-run` only on yes. It derives the `type:feat|bug|chore` label from the commit subjects, creates the label when the repo lacks it, pushes, opens the PR assigned to `@me`, or force-with-lease pushes and updates the branch's already-open PR, and refuses a body missing the `Closes owner/repo#n` of an archived `proposal.md`. Never run its steps by hand. Print the URL it returns.
 
 ## 6. Merge (when the user says merge)
-Rebase-merge keeps the slices on the base branch: `gh pr merge <n> --rebase --delete-branch`. Never squash-merge: it flattens the atomic history into one commit. A repo still offering squash gets it switched off once (`gh repo edit <owner/repo> --enable-squash-merge=false`, after asking); rebase and merge commits stay allowed.
+First AskUserQuestion naming the PR number, the method (`--rebase --delete-branch`) and any `gh repo edit` below; run them only on yes.
+Rebase-merge keeps the slices on the base branch: `gh pr merge <n> --rebase --delete-branch`. Never squash-merge: it flattens the atomic history into one commit. A repo still offering squash gets it switched off once (`gh repo edit <owner/repo> --enable-squash-merge=false`, named in that question); rebase and merge commits stay allowed.
