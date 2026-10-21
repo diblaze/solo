@@ -1,0 +1,12 @@
+{
+  "name": "diblaze",
+  "description": "solo: a gated plan → execute → pr-ready workflow for Claude Code.",
+  "owner": { "name": "diblaze" },
+  "plugins": [
+    {
+      "name": "solo",
+      "source": "./",
+      "description": "Gated coding workflow: plan, execute, review, pr-ready, ship, investigate, tdd, refactor, slop, research, gap-analysis, adr, docs, standard."
+    }
+  ]
+}
