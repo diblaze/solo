@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Usage: open-pr.sh <base> --title <t> --body-file <f> [--dry-run]   (run at repo root, clean tree, on the PR branch)
+# Usage: open-pr.sh <base> --title <t> --body-file <f> [--dry-run]   (clean tree, on the PR branch)
 # Pushes the branch and opens its PR labelled type:feat|bug|chore (from the commit
 # subjects) and assigned to @me, or updates the branch's open PR. Prints the PR URL.
 # --dry-run runs every check and read-only gh call, and prints the writes instead.
@@ -20,7 +20,7 @@ done
 if [ -z "$base" ] || [ -z "$title" ] || [ -z "$body" ]; then usage; fi
 [ -f "$body" ] || die "no body file $body"
 body="$(cd "$(dirname "$body")" && pwd)/$(basename "$body")"
-cd "$(git rev-parse --show-toplevel)"
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")/../../plan/scripts" && pwd)/common.sh"
 
 branch="$(git rev-parse --abbrev-ref HEAD)"
 [ "$branch" != "$base" ] || die "on the base branch $base; switch to the PR branch"
@@ -37,8 +37,8 @@ label="type:$kind"
 
 while IFS= read -r proposal; do
   [ -n "$proposal" ] || continue
-  issue="$(rg -o -r '$1' '^Issue: .*#([0-9]+)\s*$' "$proposal" || true)"
-  [ -z "$issue" ] || rg -q "Closes #$issue\b" "$body" || die "body lacks 'Closes #$issue' (from $proposal)"
+  issue="$(issue_of "$proposal")"
+  [ -z "$issue" ] || rg -qwF "Closes $issue" "$body" || die "body lacks 'Closes $issue' (from $proposal)"
 done < <(git diff --name-only --diff-filter=A "$ref...HEAD" -- 'openspec/changes/archive/*/proposal.md')
 
 write() { if [ -n "$dry" ]; then printf '%q ' "$@"; echo; else "$@" >/dev/null; fi; }

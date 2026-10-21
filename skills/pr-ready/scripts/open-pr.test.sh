@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Offline test for open-pr.sh: a local bare repo as origin and a stub `gh` on PATH.
 set -euo pipefail
+# Throwaway repos below must not inherit a caller's repo (git rebase --exec exports GIT_DIR).
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OBJECT_DIRECTORIES GIT_COMMON_DIR GIT_PREFIX
 script="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/open-pr.sh"
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
@@ -116,28 +118,37 @@ case_ "Body missing Closes" "feat: a"
 archived "Issue: o/r#12"
 export STUB_LABELS=type:feat
 fails 1 main --title t --body-file "$body"
-rg -qF 'Closes #12' "$tmp/err" || fail "stderr: $(cat "$tmp/err")"
+rg -qF 'Closes o/r#12' "$tmp/err" || fail "stderr: $(cat "$tmp/err")"
 refute_log 'pr '; ! on_remote || fail "pushed"
 
 case_ "Body carries Closes" "feat: a"
 archived "Issue: o/r#12"
 export STUB_LABELS=type:feat
-echo "Closes #12" >"$body"
+echo "Closes o/r#12" >"$body"
 run main --title t --body-file "$body"
 assert_log 'pr create'
 
 case_ "Closes of another issue does not count" "feat: a"
 archived "Issue: o/r#1"
 export STUB_LABELS=type:feat
-echo "Closes #12" >"$body"
+echo "Closes o/r#12" >"$body"
 fails 1 main --title t --body-file "$body"
-rg -qF 'Closes #1' "$tmp/err" || fail "stderr: $(cat "$tmp/err")"
+rg -qF 'Closes o/r#1' "$tmp/err" || fail "stderr: $(cat "$tmp/err")"
 
 case_ "Run from a subdirectory" "feat: a"
 archived "Issue: o/r#12"
 export STUB_LABELS=type:feat
 (cd openspec && fails 1 main --title t --body-file "$body")
+rg -qF 'Closes o/r#12' "$tmp/err" || fail "stderr: $(cat "$tmp/err")"
 refute_log 'pr '
+
+case_ "Malformed Issue line refused" "feat: a"
+archived "Issue: #12"
+unset STUB_LABELS
+echo "Closes #12" >"$body"
+fails 1 main --title t --body-file "$body"
+rg -qF 'Issue' "$tmp/err" || fail "stderr: $(cat "$tmp/err")"
+refute_log 'pr '; refute_log 'label create'; ! on_remote || fail "pushed"
 
 case_ "Archived change without issue" "feat: a"
 archived "Issue: none"
