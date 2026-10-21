@@ -33,7 +33,7 @@
 - Scanning PR and issue text — reopen when open-pr bodies leak private strings; would belong in `open-pr.sh`.
 - Email patterns — gitleaks scans patches, not commit metadata, and the history uses a noreply address; reopen if author metadata needs checking.
 - Bumping docker-image digests automatically (Dependabot github-actions ignores `docker run` lines) — reopen when Renovate or Dependabot covers them.
-- Plugin version bump — reopen when a task changes what an installed plugin does (E22).
+- Plugin version bump for the tooling itself; 2.0.1 covers only the `standard` skill change below (E22).
 
 ## Decisions
 - Fix E1–E3 in the source (directive line, `cd "$root" || exit`, quote `"done"`) and run shellcheck at `-S warning` everywhere; E4 infos are deliberate idioms. Lost: `.shellcheckrc` with disables (more lines, same effect). E1–E4.
