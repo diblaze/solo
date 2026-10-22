@@ -4,7 +4,7 @@ solo is a Claude Code plugin that runs every non-trivial change through three ga
 
 It is built for one developer working with an AI pair: you make the decisions (approve the plan, answer open questions, say yes to push and merge), and the agents do the legwork in between. Every step leaves evidence behind: an OpenSpec change folder, a GitHub issue, atomic commits, a review.
 
-- **14 skills**: 4 gates (plan, execute, review, pr-ready), the `ship` shortcut that chains them, and 9 helpers (investigate, tdd, refactor, slop, research, gap-analysis, adr, docs, standard).
+- **15 skills**: 4 gates (plan, execute, review, pr-ready), the `ship` shortcut that chains them, and 10 helpers (investigate, tdd, refactor, slop, research, gap-analysis, adr, docs, standard, map).
 - **4 subagents**: planner, explorer, reviewer, implementer. Each one has a narrow job and a fixed model.
 - **Principles**: cite evidence (`path:line`), shortest correct diff, one logical change per commit, and a runnable check for every change.
 
@@ -45,6 +45,7 @@ Each skill says what it does not do and which skill does that instead, so the mo
 | `/solo:adr` | A choice is hard to undo (dependency, schema, protocol, hosting, auth) or was argued about. Writes `docs/adr/` | How the system works (`docs`) |
 | `/solo:docs` | Someone needs to use or change the thing: README, feature doc, API surface, from code evidence | Why a decision was made (`adr`) |
 | `/solo:standard` | New repo, changed tooling, or a skill reports "no coding standard". Writes `## Coding standard` in `AGENTS.md` | Enforcing it on a diff (`review`) |
+| `/solo:map` | New or inherited repo, or the layout moved. Writes a root `## Map` and one `AGENTS.md` per directory that carries weight, keeps hand-written lines, then `/solo:pr-ready` | The coding standard (`standard`), README or feature docs (`docs`) |
 
 ## Subagents
 
@@ -55,7 +56,7 @@ The expensive model thinks once, in a throwaway context, and hands off a file. T
 | `solo:planner` | Opus (Fable only on your yes) | Read, Grep, Glob, Bash, Write | `/solo:plan` only | Writes the OpenSpec change: proposal, delta specs, design, tasks. Never edits code or asks you; open questions go in `design.md` |
 | `solo:explorer` | Haiku | Read, Grep, Glob, Bash | Any skill, when a sweep would flood context | Read-only sweep of a repo or log set. Returns `file:line` citations and a one-paragraph conclusion |
 | `solo:reviewer` | Opus | Read, Grep, Glob, Bash | `/solo:review` (so also execute and pr-ready) | Fresh-eyes review of a diff. Assumes the change is wrong and tries to prove it: bugs, missed callers, over-engineering, slop, leftover `ponytail:` markers |
-| `solo:implementer` | Sonnet (Opus for heavy groups) | Read, Edit, Write, Bash, Grep, Glob | `/solo:execute`, `/solo:tdd`, `/solo:refactor` | One bounded unit: a task group, a green step or a refactor move, with named paths and a verification command. Never plans, reviews, commits or ticks tasks |
+| `solo:implementer` | Sonnet (Opus for heavy groups) | Read, Edit, Write, Bash, Grep, Glob | `/solo:execute`, `/solo:tdd`, `/solo:refactor`, `/solo:map` | One bounded unit: a task group, a green step or a refactor move, with named paths and a verification command. Never plans, reviews, commits or ticks tasks |
 
 When your repo's `AGENTS.md` or `CLAUDE.md`, or your own `CLAUDE.md`, names a reviewer agent for a repo, `/solo:review` dispatches that one instead of `solo:reviewer`. Work you can finish in a handful of tool calls is never delegated.
 
@@ -95,8 +96,9 @@ Skills run these instead of retyping CLI commands, so every run does the same th
 | `skills/plan/scripts/set-status.sh <slug> <draft\|approved\|done> [owner/repo#n\|none]` | Rewrites the header in `proposal.md`; `done` refuses while a task box is open |
 | `skills/pr-ready/scripts/fold.sh <slug>` | Box and status checks, validate, archive, validate living specs, commit `docs(spec): fold <slug>` |
 | `skills/pr-ready/scripts/open-pr.sh <base> --title <t> --body-file <f> [--dry-run]` | Type label from the commits, creates it when missing, pushes, opens or updates the PR assigned to `@me`, refuses a body without `Closes owner/repo#n` |
+| `skills/map/scripts/check-map.sh [base-ref]` | Refuses an `AGENTS.md` anywhere below a plugin's or `.claude/`'s `agents/`, `commands/` or `output-styles/` folder, a link or `Parent` comment that does not resolve (code spans and fences are skipped), and a root `## Coding standard` changed since `base-ref` |
 
-Tests: `bash skills/plan/scripts/scripts.test.sh`, `bash skills/pr-ready/scripts/open-pr.test.sh` and `bash tests/guards.test.sh`.
+Tests: `bash skills/plan/scripts/scripts.test.sh`, `bash skills/pr-ready/scripts/open-pr.test.sh`, `bash tests/guards.test.sh` and `bash skills/map/scripts/check-map.test.sh`.
 
 ## Rules the plugin enforces
 

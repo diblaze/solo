@@ -1,6 +1,6 @@
 ---
 name: standard
-description: Set or update a repo's coding standard as a `## Coding standard` section in its AGENTS.md — stack, package manager, check command, style and test rules, Context7 library IDs — so humans and agents read the same rules. Detects from the repo, confirms choices with the user, writes once. Use on a new repo, when tooling changes, or when a skill reports "no coding standard". Does not enforce the standard on a diff — use solo:review.
+description: Set or update a repo's coding standard as a `## Coding standard` section in its AGENTS.md — stack, package manager, check command, style and test rules, Context7 library IDs — so humans and agents read the same rules. Detects from the repo, confirms choices with the user, writes once. Use on a new repo, when tooling changes, or when a skill reports "no coding standard". Does not enforce the standard on a diff — use solo:review. Does not write per-directory AGENTS.md maps — use solo:map.
 argument-hint: [repo root, default cwd]
 ---
 

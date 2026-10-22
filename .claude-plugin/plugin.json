@@ -1,7 +1,7 @@
 {
   "name": "solo",
-  "version": "2.0.1",
-  "description": "Gated coding workflow: plan → execute → review → pr-ready (or ship for all of it), plus investigate, tdd, refactor, slop, research, gap-analysis, adr, docs, standard. OpenSpec changes and living specs, evidence-cited, YAGNI-gated, shortest diff.",
+  "version": "2.1.0",
+  "description": "Gated coding workflow: plan → execute → review → pr-ready (or ship for all of it), plus investigate, tdd, refactor, slop, research, gap-analysis, adr, docs, standard, map. OpenSpec changes and living specs, evidence-cited, YAGNI-gated, shortest diff.",
   "author": { "name": "diblaze" },
   "keywords": ["workflow", "planning", "review", "tdd", "ponytail"]
 }

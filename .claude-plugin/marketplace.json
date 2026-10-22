@@ -6,7 +6,7 @@
     {
       "name": "solo",
       "source": "./",
-      "description": "Gated coding workflow: plan, execute, review, pr-ready, ship, investigate, tdd, refactor, slop, research, gap-analysis, adr, docs, standard."
+      "description": "Gated coding workflow: plan, execute, review, pr-ready, ship, investigate, tdd, refactor, slop, research, gap-analysis, adr, docs, standard, map."
     }
   ]
 }

@@ -6,7 +6,7 @@ pre-commit:
       run: shellcheck -S warning {staged_files}
     - name: tests
       glob: ["*.sh", "skills/*/SKILL.md", "agents/*.md"]
-      run: bash skills/plan/scripts/scripts.test.sh && bash skills/pr-ready/scripts/open-pr.test.sh && bash tests/guards.test.sh
+      run: bash skills/plan/scripts/scripts.test.sh && bash skills/pr-ready/scripts/open-pr.test.sh && bash tests/guards.test.sh && bash skills/map/scripts/check-map.test.sh
     - name: gitleaks
       run: gitleaks git --pre-commit --staged --redact --no-banner
 
@@ -15,6 +15,6 @@ pre-push:
     - name: shellcheck
       run: git ls-files -z '*.sh' | xargs -0 shellcheck -S warning
     - name: tests
-      run: bash skills/plan/scripts/scripts.test.sh && bash skills/pr-ready/scripts/open-pr.test.sh && bash tests/guards.test.sh
+      run: bash skills/plan/scripts/scripts.test.sh && bash skills/pr-ready/scripts/open-pr.test.sh && bash tests/guards.test.sh && bash skills/map/scripts/check-map.test.sh
     - name: gitleaks
       run: gitleaks git --redact --no-banner
