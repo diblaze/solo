@@ -8,3 +8,13 @@
 - Language: code, commits and docs English.
 - Tracking: GitHub Issues. Labels `type:bug|feat|chore`. The last slice commit carries `Refs owner/repo#n`; the spec-fold commit carries `Closes owner/repo#n`.
 - Don't: commit personal names, domains, hostnames, private IPs or home-directory paths — in files, commit messages, issues or PRs.
+
+## Map
+| Directory | Purpose |
+| --- | --- |
+| agents/ | Subagent definitions: planner, explorer, implementer, reviewer |
+| openspec/ | OpenSpec living specs and archived changes (the spec tool owns it) |
+| [skills/](skills/AGENTS.md) | One folder per `/solo:*` skill, with the shared change scripts |
+| [skills/plan/scripts/](skills/plan/scripts/AGENTS.md) | OpenSpec change scripts and the shared `common.sh` |
+| [skills/pr-ready/scripts/](skills/pr-ready/scripts/AGENTS.md) | Fold the specs, push and open the PR |
+| tests/ | `guards.test.sh`, static checks on skill and agent text |
