@@ -6,10 +6,10 @@ The directory map: a root index plus per-directory agent instruction files, writ
 ## Requirements
 
 ### Requirement: Map links resolve
-The system SHALL give the root `AGENTS.md` a Map table with one row per mapped directory. Each row links that directory's file. Each nested file SHALL name its nearest mapped ancestor's file as its parent. A map check SHALL fail when any relative link or parent reference in an `AGENTS.md` does not resolve.
+The system SHALL give the root `AGENTS.md` a Map table with one row per mapped directory. Each row links that directory's file. Each nested file SHALL name its nearest mapped ancestor's file as its parent. A map check SHALL fail when any relative link or parent reference in an `AGENTS.md` does not resolve, or when a nested `AGENTS.md` has no row linking it in the root Map.
 
 #### Scenario: Valid map passes
-- **GIVEN** a repository whose root `AGENTS.md` links `src/AGENTS.md`, whose `src/AGENTS.md` names `../AGENTS.md` as parent, and which has a `src/agents/AGENTS.md` outside any plugin
+- **GIVEN** a repository whose root `AGENTS.md` links `src/AGENTS.md`, whose `src/AGENTS.md` names `../AGENTS.md` as parent, and which has a `src/agents/AGENTS.md` outside any plugin, linked from the root Map
 - **WHEN** the map is checked
 - **THEN** the check exits 0
 
@@ -17,6 +17,11 @@ The system SHALL give the root `AGENTS.md` a Map table with one row per mapped d
 - **GIVEN** an `AGENTS.md` that links a path that does not exist
 - **WHEN** the map is checked
 - **THEN** the check exits non-zero and names the file and the link
+
+#### Scenario: Unlinked map file refused
+- **GIVEN** a nested `AGENTS.md` that no row of the root Map links
+- **WHEN** the map is checked
+- **THEN** the check exits non-zero and names that file
 
 ### Requirement: Only directories that carry weight are mapped
 The system SHALL consider only tracked files. It SHALL offer a map file only for a directory with at least 3 tracked files directly in it, or with at least 2 subdirectories that hold tracked files. Hidden, vendored, generated, fixture and spec-tool directories SHALL get no file.
