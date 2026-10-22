@@ -22,7 +22,7 @@ newrepo() {
   cd "$(mktemp -d "$tmp/r.XXXX")"
   git init -q && git config user.email t@example.com && git config user.name t
   mkdir -p src
-  printf '# repo\n\n## Coding standard\n- Check: `make check`\n- Tests: `make test`\n\n## Map\n| Directory | Purpose |\n| --- | --- |\n| [src/](src/AGENTS.md) | code |\n' >AGENTS.md
+  printf '# repo\n\n## Coding standard\n- Check: `make check`\n- Tests: `make test`\n\n## Map\n| Directory | Purpose |\n| --- | --- |\n| [src/](src/AGENTS.md) | code |\n| [src/agents/](src/agents/AGENTS.md) | agents |\n' >AGENTS.md
   printf '<!-- Parent: ../AGENTS.md -->\n# src/\n\n## Purpose\nCode. See [main](main.sh).\n' >src/AGENTS.md
   touch src/main.sh
   mkdir -p src/agents && printf '# agents\n' >src/agents/AGENTS.md
@@ -59,6 +59,7 @@ rg -qF '.claude/agents/AGENTS.md' "$tmp/err" || fail "stderr: $(cat "$tmp/err")"
 
 newrepo "Plugin definition folder refused (non-plugin agents/ is fine)"
 mkdir -p agents && printf '# agents\n' >agents/AGENTS.md
+printf '| [agents/](agents/AGENTS.md) | agents |\n' >>AGENTS.md
 fails 0 "$CHECK"
 
 newrepo "Coding standard edited refused"
@@ -100,5 +101,32 @@ done
 newrepo "Coding standard edited refused (typo base ref)"
 fails nonzero "$CHECK" origin/mian
 rg -qF 'origin/mian' "$tmp/err" || fail "stderr: $(cat "$tmp/err")"
+
+newrepo "Unlinked map file refused"
+mkdir -p docs && printf '<!-- Parent: ../AGENTS.md -->\n# docs/\n' >docs/AGENTS.md
+fails nonzero "$CHECK"
+rg -qF 'docs/AGENTS.md' "$tmp/err" && rg -q 'root Map' "$tmp/err" || fail "stderr: $(cat "$tmp/err")"
+
+newrepo "Unlinked map file refused (no root AGENTS.md)"
+git rm -q AGENTS.md
+fails nonzero "$CHECK"
+rg -qF 'src/AGENTS.md' "$tmp/err" || fail "stderr: $(cat "$tmp/err")"
+
+newrepo "Unlinked map file refused (link outside the Map section)"
+mkdir -p docs && printf '# docs/\n' >docs/AGENTS.md
+sed -i 's|^# repo$|# repo\nSee [docs](docs/AGENTS.md).|' AGENTS.md
+fails nonzero "$CHECK"
+rg -qF 'docs/AGENTS.md' "$tmp/err" || fail "stderr: $(cat "$tmp/err")"
+
+newrepo "Valid map passes (unnormalised Map links)"
+mkdir -p docs && printf '# docs/\n' >docs/AGENTS.md
+printf '| [docs/](./docs/../docs//./AGENTS.md) | docs |\n' >>AGENTS.md
+fails 0 "$CHECK"
+
+newrepo "Plugin definition folder refused (one error, no Map row asked)"
+mkdir -p .claude-plugin agents && echo '{}' >.claude-plugin/plugin.json
+printf '# a\n' >agents/AGENTS.md
+fails nonzero "$CHECK"
+! rg -q 'root Map' "$tmp/err" || fail "asked for a Map row: $(cat "$tmp/err")"
 
 echo "check-map.test.sh: ok"
