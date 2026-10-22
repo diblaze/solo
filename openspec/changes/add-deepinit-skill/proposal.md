@@ -1,6 +1,6 @@
 # Proposal
 
-Status: approved
+Status: done
 Issue: diblaze/solo#5
 
 ## Why

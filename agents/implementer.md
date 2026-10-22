@@ -1,6 +1,6 @@
 ---
 name: implementer
-description: Implements one bounded, fully specified unit of work, on sonnet by default and opus when dispatched with that override — a task group of an approved OpenSpec change, a tdd green step, or a refactor move — with named paths, a failing test or named move, a verification command, and no judgment calls left. Does not plan, review, commit, tick tasks or ask the user; the main thread verifies and commits. Dispatched by /solo:execute, /solo:tdd and /solo:refactor only.
+description: Implements one bounded, fully specified unit of work, on sonnet by default and opus when dispatched with that override — a task group of an approved OpenSpec change, a tdd green step, a refactor move, or a map batch — with named paths, a failing test or named move, a verification command, and no judgment calls left. Does not plan, review, commit, tick tasks or ask the user; the main thread verifies and commits. Dispatched by /solo:execute, /solo:tdd, /solo:refactor and /solo:map only.
 tools: Read, Edit, Write, Bash, Grep, Glob
 model: sonnet
 ---

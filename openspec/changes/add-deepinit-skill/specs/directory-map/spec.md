@@ -87,7 +87,7 @@ The system SHALL show the candidate directory list and wait for the user's yes b
 - **THEN** that file is not staged
 
 ### Requirement: Unloaded maps are reported
-The system SHALL say in its report that nested map files are loaded only when the AGENTS.md option `instructionFiles` is `claude-md-and-agents-md`. It SHALL do this when the repository has a `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md`. It SHALL NOT edit any `CLAUDE.md` or setting.
+The system SHALL say in its report that nested map files are loaded only when the AGENTS.md option `instructionFiles` is `claude-md-and-agents-md`. It SHALL do this when the repository has a `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md`. It SHALL NOT change any `CLAUDE.md` content or the `instructionFiles` setting, and SHALL delete those files only on the user's yes.
 
 #### Scenario: Repo with CLAUDE.md warned
 - **GIVEN** a repository with a root `CLAUDE.md`

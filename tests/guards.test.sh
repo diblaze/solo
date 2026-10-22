@@ -55,4 +55,54 @@ ex="$(cat "$P/skills/execute/SKILL.md")"
 has "$ex" 'git add -u && git add -- '
 has "$ex" 'openspec/changes/<slug>/'
 
+m="$(cat "$P/skills/map/SKILL.md" 2>/dev/null || true)"
+
+case="Small and hidden directories skipped"
+has "$m" 'git ls-files'
+has "$m" 'fewer than 3'
+has "$m" 'hidden'
+has "$m" 'vendored'
+has "$m" 'fixture'
+has "$m" 'openspec/'
+
+case="Plugin definition folder not offered"
+has "$m" 'agents/'
+has "$m" 'commands/'
+has "$m" 'output-styles/'
+has "$m" 'frontmatter'
+has "$m" 'check-map\.sh'
+
+case="Coding standard kept on write"
+has "$m" '## Coding standard'
+has "$m" 'byte for byte'
+
+case="Unchanged tree re-run leaves no diff"
+has "$m" 'no timestamps'
+has "$m" 'unchanged tree'
+
+case="Hand-written line kept"
+has "$m" 'keyed by their first-column path'
+has "$m" 'kept unless the code proves it false'
+
+case="Directory no longer qualifies"
+has "$m" 'orphans are removed with `git rm`'
+has "$m" 'shown with its hand-written lines'
+
+case="Directory list approved first"
+! rg -q '^allowed-tools:' <<<"$m" || fail "map pre-approves tools"
+has "$m" 'AskUserQuestion'
+has "$m" 'Nothing is written before'
+
+case="Main branch not written"
+has "$m" 'git switch -c docs/agents-map'
+
+case="Only map files staged"
+! rg -qF 'git add -A' <<<"$m" || fail "map stages everything"
+has "$m" 'git add -- <each AGENTS.md written>'
+
+case="Repo with CLAUDE.md warned"
+has "$m" 'claude-md-and-agents-md'
+has "$m" 'delete .*CLAUDE\.md'
+has "$m" 'only on a yes'
+
 echo "guards.test.sh: ok"
