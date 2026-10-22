@@ -95,8 +95,9 @@ Skills run these instead of retyping CLI commands, so every run does the same th
 | `skills/plan/scripts/set-status.sh <slug> <draft\|approved\|done> [owner/repo#n\|none]` | Rewrites the header in `proposal.md`; `done` refuses while a task box is open |
 | `skills/pr-ready/scripts/fold.sh <slug>` | Box and status checks, validate, archive, validate living specs, commit `docs(spec): fold <slug>` |
 | `skills/pr-ready/scripts/open-pr.sh <base> --title <t> --body-file <f> [--dry-run]` | Type label from the commits, creates it when missing, pushes, opens or updates the PR assigned to `@me`, refuses a body without `Closes owner/repo#n` |
+| `skills/map/scripts/check-map.sh [base-ref]` | Refuses an `AGENTS.md` anywhere below a plugin's or `.claude/`'s `agents/`, `commands/` or `output-styles/` folder, a link or `Parent` comment that does not resolve (code spans and fences are skipped), and a root `## Coding standard` changed since `base-ref` |
 
-Tests: `bash skills/plan/scripts/scripts.test.sh`, `bash skills/pr-ready/scripts/open-pr.test.sh` and `bash tests/guards.test.sh`.
+Tests: `bash skills/plan/scripts/scripts.test.sh`, `bash skills/pr-ready/scripts/open-pr.test.sh`, `bash tests/guards.test.sh` and `bash skills/map/scripts/check-map.test.sh`.
 
 ## Rules the plugin enforces
 
