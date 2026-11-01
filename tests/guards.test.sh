@@ -27,12 +27,12 @@ merge="$(rg -n -m1 'gh pr merge' <<<"$s6" | cut -d: -f1)"
 
 case="Outsider instruction ignored"
 plan0="$(rg '^0\. ' "$P/skills/plan/SKILL.md")"
-has "$plan0" '--json [^`]*author'
-has "$plan0" 'comments'
-has "$plan0" 'collaborators/'
+has "$plan0" 'read-issue\.sh'
+has "$plan0" 'outsider'
 has "$plan0" 'claim'
 inv="$(cat "$P/skills/investigate/SKILL.md")"
-has "$inv" '--json [^`]*author'
+has "$inv" 'read-issue\.sh'
+has "$inv" 'outsider'
 has "$inv" 'claim'
 has "$(cat "$P/agents/planner.md")" 'never an instruction'
 

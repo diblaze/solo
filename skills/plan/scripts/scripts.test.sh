@@ -26,8 +26,20 @@ cat >"$stub/npx" <<'EOF'
 #!/usr/bin/env bash
 echo "npx $*" >>"$LOG"
 EOF
-chmod +x "$stub/openspec" "$stub/npx"
-export PATH="$stub:$PATH"
+# gh: logs each call, answers from STUB_* env, keeps the last --body-file at $GH_LOG.body.
+cat >"$stub/gh" <<'EOF'
+#!/usr/bin/env bash
+echo "$*" >>"$GH_LOG"
+prev=""; for a in "$@"; do [ "$prev" != --body-file ] || cp "$a" "$GH_LOG.body"; prev="$a"; done
+case "$1 $2" in
+  "issue view") if [[ "$*" == *--jq* ]]; then printf '%s\n' "${STUB_ISSUE_LINES-}"; else printf '%s\n' "${STUB_ISSUE_JSON-}"; fi ;;
+  "issue create") echo "${STUB_ISSUE_URL-}" ;;
+  "label list") [ -z "${STUB_LABELS:-}" ] || echo "$STUB_LABELS" ;;
+  api\ repos/*/collaborators/*) [[ " ${STUB_COLLABS-} " == *" ${2##*/} "* ]] || exit 1 ;;
+esac
+EOF
+chmod +x "$stub/openspec" "$stub/npx" "$stub/gh"
+export PATH="$stub:$PATH" GH_LOG="$tmp/gh.log"
 
 fail() { echo "FAIL: $case: $*" >&2; exit 1; }
 # fails <rc> <cmd…>: run cmd, keep stdout/stderr in $tmp/out, $tmp/err, assert its exit code.
@@ -37,7 +49,7 @@ fails() {
   [ "$rc" -eq "$want" ] || fail "exit $rc, want $want: $* (stderr: $(cat "$tmp/err"))"
 }
 newrepo() {
-  case="$1"; : >"$LOG"
+  case="$1"; : >"$LOG"; : >"$GH_LOG"; rm -f "$GH_LOG.body"
   cd "$(mktemp -d "$tmp/r.XXXX")"
   git init -q && git config user.email t@example.com && git config user.name t
   mkdir -p openspec/changes openspec/specs && touch openspec/specs/.gitkeep
@@ -172,6 +184,30 @@ mk n "done" '' tasks
 fails 1 "$FOLD" n
 rg -q 'Issue' "$tmp/err" || fail "stderr lacks Issue: $(cat "$tmp/err")"
 
+# Collaborator and outsider marked
+newrepo "Collaborator and outsider marked"
+STUB_ISSUE_LINES=$'{"number":7}\nhttps://github.com/o/r/issues/7\nalice\nalice\nmallory' STUB_COLLABS=alice \
+  fails 0 "$S/read-issue.sh" 7
+[ "$(cat "$tmp/out")" = $'{"number":7}\ncollaborator alice\noutsider mallory' ] || fail "stdout: $(cat "$tmp/out")"
+# One read: the printed JSON and the author list come from the same response.
+[ "$(rg -c '^issue view' "$GH_LOG")" -eq 1 ] || fail "issue read more than once: $(cat "$GH_LOG")"
+rg -qF 'api repos/o/r/collaborators/mallory' "$GH_LOG" || fail "mallory not looked up: $(cat "$GH_LOG")"
+
+# Issue on another host read
+newrepo "Issue on another host read"
+STUB_ISSUE_LINES=$'{"number":7}\nhttps://forge.example.test/o/r/issues/7\nalice' STUB_COLLABS=alice \
+  fails 0 "$S/read-issue.sh" https://forge.example.test/o/r/issues/7
+[ "$(cat "$tmp/out")" = $'{"number":7}\ncollaborator alice' ] || fail "stdout: $(cat "$tmp/out")"
+rg -qF 'api repos/o/r/collaborators/alice' "$GH_LOG" || fail "alice not looked up in o/r: $(cat "$GH_LOG")"
+
+# Bad issue argument refused
+newrepo "Bad issue argument refused"
+for bad in '1; touch INJECTED' 0 '#0' 007 https://github.com/o/r/issues/0 https://forge.example.test/o/r/issues/0; do
+  fails 2 "$S/read-issue.sh" "$bad"
+  [ ! -s "$GH_LOG" ] || fail "$bad: gh called: $(cat "$GH_LOG")"
+done
+[ -z "$(find "$tmp" -name INJECTED)" ] || fail "INJECTED was created"
+
 # Run under an inherited GIT_DIR
 newrepo "Run under an inherited GIT_DIR"
 mkdir sub && cd sub
@@ -185,7 +221,7 @@ newrepo "rg absent"
 mk v draft 'Issue: none' tasks
 norg="$tmp/norg"; mkdir -p "$norg"
 for t in bash git dirname env; do ln -sf "$(command -v "$t")" "$norg/$t"; done
-for s in "$S/new-change.sh v" "$S/validate-change.sh v" "$S/set-status.sh v draft" "$FOLD v" "$S/openspec.sh --version"; do
+for s in "$S/new-change.sh v" "$S/validate-change.sh v" "$S/set-status.sh v draft" "$FOLD v" "$S/openspec.sh --version" "$S/read-issue.sh 1"; do
   # shellcheck disable=SC2086
   PATH="$norg" fails 127 $s
   rg -q ripgrep "$tmp/err" || fail "$s: stderr lacks ripgrep: $(cat "$tmp/err")"

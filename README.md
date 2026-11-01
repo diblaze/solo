@@ -93,6 +93,7 @@ Skills run these instead of retyping CLI commands, so every run does the same th
 | `skills/plan/scripts/openspec.sh` | Runs OpenSpec 1.14.1: a global CLI only at that exact version, else `npx -y @fission-ai/openspec@1.14.1`; exit 127 when neither exists |
 | `skills/plan/scripts/new-change.sh <slug>` | `openspec init` when the repo has none, creates the change, prints its path |
 | `skills/plan/scripts/validate-change.sh <slug>` | Strict validation, `Status:`/`Issue:` checks, every scenario named in quotes by a task |
+| `skills/plan/scripts/read-issue.sh <n\|#n\|url>` | Prints the issue JSON, then `collaborator <login>` or `outsider <login>` per author of the issue and its comments |
 | `skills/plan/scripts/set-status.sh <slug> <draft\|approved\|done> [owner/repo#n\|none]` | Rewrites the header in `proposal.md`; `done` refuses while a task box is open |
 | `skills/pr-ready/scripts/fold.sh <slug>` | Box, status and clean-tree checks (untracked files outside `openspec/` are ignored), validate, archive, validate living specs, commit `docs(spec): fold <slug>` |
 | `skills/pr-ready/scripts/open-pr.sh <base> --title <t> --body-file <f> [--dry-run]` | Type label from the commits, creates it when missing, pushes, opens or updates the PR assigned to `@me`, refuses a body without `Closes owner/repo#n` |
