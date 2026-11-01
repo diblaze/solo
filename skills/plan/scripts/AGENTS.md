@@ -2,7 +2,7 @@
 # skills/plan/scripts/
 
 ## Purpose
-The OpenSpec change scripts that `/solo:plan` and `/solo:execute` run: create a change, validate it, set its status, and call the pinned OpenSpec CLI. `common.sh` is sourced by every change script here and by the `pr-ready` and `map` scripts.
+The OpenSpec change scripts that `/solo:plan` and `/solo:execute` run: create a change, validate it, set its status, and call the pinned OpenSpec CLI; plus the shared `gh`/`git` scripts that `/solo:plan`, `/solo:investigate`, `/solo:ship`, `/solo:execute` and `/solo:pr-ready` run: read an issue, create the tracking issue, check every commit. `common.sh` is sourced by every change script here and by the `pr-ready` and `map` scripts.
 
 ## Key files
 | File | Purpose |
@@ -15,6 +15,7 @@ The OpenSpec change scripts that `/solo:plan` and `/solo:execute` run: create a 
 | scripts.test.sh | Offline tests with stub `openspec`/`npx` on `PATH` and throwaway repos |
 | set-status.sh | Rewrites `Status:` (and `Issue:`) in `proposal.md`; `done` refuses unticked tasks |
 | validate-change.sh | Strict validation plus every scenario named by a task |
+| verify-commits.sh | Runs a check at every commit in `<base>..HEAD` in a throwaway worktree; names the first failing commit |
 
 ## For AI agents
 - Test: `bash skills/plan/scripts/scripts.test.sh`.

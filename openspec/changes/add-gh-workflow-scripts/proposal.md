@@ -1,6 +1,6 @@
 # Proposal
 
-Status: approved
+Status: done
 Issue: diblaze/solo#10
 
 ## Why
@@ -9,7 +9,7 @@ Four skill steps still have the agent hand-type `gh`/`git` write sequences (issu
 ## What Changes
 - Add create-issue.sh: on approval, create the change's tracking issue and set the change approved
 - Add `read-issue.sh <n|url>`: prints the issue JSON plus one `collaborator|outsider <login>` line per author
-- Add `merge-pr.sh <n> [--dry-run]`: switches squash off, retargets stacked child PRs, rebase-merges with branch delete, fast-forwards the local base
+- Add `merge-pr.sh <n> [--dry-run]`: switches squash off, rebase-merges, retargets stacked child PRs, deletes the branch, fast-forwards the local base
 - Add `verify-commits.sh <base> -- <check…>`: runs the check on every commit in a throwaway worktree, names the first failing commit
 - `open-pr.sh` ignores untracked files; `fold.sh` ignores untracked files outside `openspec/`
 - plan, investigate, execute, pr-ready and ship skills call these scripts instead of describing the commands

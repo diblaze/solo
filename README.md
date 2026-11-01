@@ -96,6 +96,7 @@ Skills run these instead of retyping CLI commands, so every run does the same th
 | `skills/plan/scripts/read-issue.sh <n\|#n\|url>` | Prints the issue JSON, then `collaborator <login>` or `outsider <login>` per author of the issue and its comments |
 | `skills/plan/scripts/create-issue.sh <slug> [--dry-run]` | Creates the tracking issue from the proposal (title, Why + What Changes body, type label, `@me`) unless it names one, then sets `Status: approved` |
 | `skills/plan/scripts/set-status.sh <slug> <draft\|approved\|done> [owner/repo#n\|none]` | Rewrites the header in `proposal.md`; `done` refuses while a task box is open |
+| `skills/plan/scripts/verify-commits.sh <base> -- <check…>` | Runs the check at every branch commit, oldest first, in a throwaway worktree; names the first failing commit and leaves your tree untouched |
 | `skills/pr-ready/scripts/fold.sh <slug>` | Box, status and clean-tree checks (untracked files outside `openspec/` are ignored), validate, archive, validate living specs, commit `docs(spec): fold <slug>` |
 | `skills/pr-ready/scripts/open-pr.sh <base> --title <t> --body-file <f> [--dry-run]` | Type label from the commits, creates it when missing, pushes, opens or updates the PR assigned to `@me`, refuses a body without `Closes owner/repo#n` |
 | `skills/pr-ready/scripts/merge-pr.sh <n> [--dry-run]` | Switches squash merging off, rebase-merges, retargets open PRs stacked on the branch, prints each child's rebase, deletes the branch, fast-forwards the local base |

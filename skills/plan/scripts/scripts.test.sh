@@ -294,6 +294,56 @@ rg -q 'set-status\.sh add-x approved' "$tmp/out" || fail "stdout lacks set-statu
 ! rg -q 'create' "$GH_LOG" || fail "write made: $(cat "$GH_LOG")"
 cmp -s "$tmp/before" openspec/changes/add-x/proposal.md || fail "proposal changed"
 
+# vrepo <name>: main plus branch b with three commits; the second adds `marker`, the third removes it.
+vrepo() {
+  newrepo "$1"; git branch -M main; git switch -q -c b
+  git commit -q --allow-empty -m "c1"
+  touch marker && git add marker && git commit -q -m "c2"
+  git rm -q marker && git commit -q -m "c3"
+  export CHECK_LOG="$tmp/check.$RANDOM"; : >"$CHECK_LOG"
+}
+V="$S/verify-commits.sh"
+
+# Every commit passes
+vrepo "Every commit passes"
+fails 0 "$V" main -- true
+[ "$(rg '^ok ' "$tmp/out" | cut -d' ' -f2 | paste -sd' ')" = "$(git rev-list --reverse main..HEAD | paste -sd' ')" ] || fail "stdout: $(cat "$tmp/out")"
+
+# Failing commit named
+vrepo "Failing commit named"
+# shellcheck disable=SC2016
+fails 1 "$V" main -- sh -c 'echo x >>"$CHECK_LOG"; [ ! -e marker ]'
+rg -qF "$(git rev-parse HEAD~1)" "$tmp/err" || fail "stderr lacks commit 2: $(cat "$tmp/err")"
+[ "$(wc -l <"$CHECK_LOG")" -eq 2 ] || fail "check ran $(wc -l <"$CHECK_LOG") times"
+
+# Missing check refused
+vrepo "Missing check refused"
+fails 2 "$V" main
+rg -q usage "$tmp/err" || fail "stderr: $(cat "$tmp/err")"
+fails 2 "$V" main --
+rg -q usage "$tmp/err" || fail "stderr: $(cat "$tmp/err")"
+
+# No commits ahead refused
+vrepo "No commits ahead refused"
+git switch -q main
+# shellcheck disable=SC2016
+fails 1 "$V" main -- sh -c 'echo x >>"$CHECK_LOG"'
+[ ! -s "$CHECK_LOG" ] || fail "check ran"
+
+# Caller's tree untouched after a failure
+vrepo "Caller's tree untouched after a failure"
+echo dirty >>openspec/specs/.gitkeep
+# An unrelated worktree moved by hand is prunable; the run must not drop its registration.
+git worktree add -q --detach "$tmp/wt-a.$RANDOM" && moved="$(git worktree list --porcelain | rg -o -r '$1' '^worktree (.*wt-a.*)$')"
+mv "$moved" "$moved.moved"
+td="$(mktemp -d "$tmp/td.XXXX")"
+before="$(git rev-parse --abbrev-ref HEAD) $(git rev-parse HEAD) $(git status --porcelain | paste -sd,)"
+TMPDIR="$td" fails 1 "$V" main -- sh -c 'touch made; exit 1'
+[ -z "$(ls -A "$td")" ] || fail "temp dir left: $(ls -A "$td")"
+[ "$(git worktree list | wc -l)" -eq 2 ] || fail "worktrees: $(git worktree list)"
+git worktree list | rg -qF "$moved" || fail "unrelated worktree pruned"
+[ "$(git rev-parse --abbrev-ref HEAD) $(git rev-parse HEAD) $(git status --porcelain | paste -sd,)" = "$before" ] || fail "caller's tree changed"
+
 # Run under an inherited GIT_DIR
 newrepo "Run under an inherited GIT_DIR"
 mkdir sub && cd sub

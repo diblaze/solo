@@ -11,6 +11,11 @@ The system SHALL print the issue's URL, title, body, author, comments, labels, p
 - **WHEN** the issue is read
 - **THEN** the issue JSON is printed, then exactly the lines `collaborator alice` and `outsider mallory`
 
+#### Scenario: Issue on another host read
+- **GIVEN** an issue at `https://forge.example.test/o/r/issues/7` written by `alice`, a collaborator
+- **WHEN** the issue is read by that URL
+- **THEN** the issue JSON is printed, then exactly the line `collaborator alice`, looked up in `o/r`
+
 #### Scenario: Bad issue argument refused
 - **GIVEN** any repository
 - **WHEN** the issue `1; touch INJECTED` is read
@@ -33,6 +38,19 @@ The system SHALL, when a change is approved and its proposal says `Issue: none`,
 - **GIVEN** a draft change with `Issue: none` and no list item under What Changes
 - **WHEN** it is approved
 - **THEN** it exits non-zero naming What Changes, no issue is created and the proposal still says `Status: draft`
+
+### Requirement: Approval follows the change status
+The system SHALL approve only a change whose `Status:` is `draft` or `approved`, refusing any other unchanged and without any forge call, and SHALL leave an already approved change that names its issue unchanged.
+
+#### Scenario: Approved change re-run
+- **GIVEN** a change whose proposal says `Status: approved` and `Issue: o/r#3`
+- **WHEN** it is approved again
+- **THEN** it exits 0, the forge is not called and the proposal is unchanged
+
+#### Scenario: Finished change refused
+- **GIVEN** a change whose proposal says `Status: done` and `Issue: o/r#3`
+- **WHEN** it is approved
+- **THEN** it exits non-zero naming the status, the forge is not called and the proposal still says `Status: done`
 
 ### Requirement: Issue type label follows the slug
 The system SHALL label the tracking issue `type:bug` for a slug starting `fix-`, `type:feat` for one starting `add-`, and `type:chore` otherwise, and SHALL create that label first when the repository lacks it.
