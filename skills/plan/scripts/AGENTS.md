@@ -7,7 +7,7 @@ The OpenSpec change scripts that `/solo:plan` and `/solo:execute` run: create a 
 ## Key files
 | File | Purpose |
 | --- | --- |
-| common.sh | Shared guard: needs `rg`, moves to the git root, validates slugs and `Issue:` lines |
+| common.sh | Shared guard: needs `rg`, moves to the git root, validates slugs and `Issue:` lines; `tracked_clean` |
 | new-change.sh | Initialises `openspec/` when missing, creates the change, prints its path |
 | openspec.sh | Runs OpenSpec 1.14.1: the global binary at that version, else `npx` |
 | scripts.test.sh | Offline tests with stub `openspec`/`npx` on `PATH` and throwaway repos |

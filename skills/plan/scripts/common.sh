@@ -13,3 +13,5 @@ issue_of() {
   rg -o -r '$1' "^Issue: ($ISSUE_RE)\s*$" "$1" || true
 }
 slug_ok() { [[ "$1" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]] || { echo "${0##*/}: slug must be kebab-case: $1" >&2; exit 2; }; }
+# tracked_clean: no staged or unstaged change to a tracked file; untracked files do not count.
+tracked_clean() { git diff --quiet && git diff --cached --quiet; }

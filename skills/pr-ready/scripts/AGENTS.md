@@ -7,8 +7,8 @@ The scripts `/solo:pr-ready` runs to finish a branch: fold the change's delta sp
 ## Key files
 | File | Purpose |
 | --- | --- |
-| fold.sh | Archives the change and commits `docs(spec): fold <slug>`; refuses unticked tasks or a Status other than done |
-| open-pr.sh | Pushes and opens the PR labelled by commit type and assigned to `@me`; `--dry-run` prints the writes |
+| fold.sh | Archives the change and commits `docs(spec): fold <slug>`; refuses unticked tasks, a Status other than done, tracked changes, or untracked files under `openspec/` (other untracked files are ignored) |
+| open-pr.sh | Pushes and opens the PR labelled by commit type and assigned to `@me`; refuses tracked changes, ignores untracked files; `--dry-run` prints the writes |
 | open-pr.test.sh | Offline test with a local bare origin and a stub `gh` |
 
 ## For AI agents

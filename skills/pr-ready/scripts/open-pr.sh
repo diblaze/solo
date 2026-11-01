@@ -27,7 +27,7 @@ branch="$(git rev-parse --abbrev-ref HEAD)"
 git fetch -q origin "+refs/heads/$base:refs/remotes/origin/$base" || die "cannot fetch $base from origin"
 ref="origin/$base"
 [ "$(git rev-list --count "$ref..HEAD")" -gt 0 ] || die "no commits ahead of $ref"
-[ -z "$(git status --porcelain)" ] || die "working tree not clean"
+tracked_clean || die "working tree not clean"
 
 subjects="$(git log --format=%s "$ref..HEAD")"
 if rg -q '^feat(\([^)]*\))?!?:' <<<"$subjects"; then kind=feat

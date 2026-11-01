@@ -130,6 +130,33 @@ mk g "done" 'Issue: none' tasks
 fails 0 "$FOLD" g
 ! git log -1 --format=%B | rg -q Closes || fail "fold commit has Closes"
 
+# Fold refuses a tracked change
+newrepo "Fold refuses a tracked change"
+mk t "done" 'Issue: none' tasks
+head="$(git rev-parse HEAD)"
+echo edit >>openspec/specs/.gitkeep
+fails 1 "$FOLD" t
+rg -q 'tree' "$tmp/err" || fail "stderr lacks tree: $(cat "$tmp/err")"
+! rg -q archive "$LOG" || fail "archive ran"
+[ "$(git rev-parse HEAD)" = "$head" ] || fail "HEAD moved"
+
+# Fold refuses an untracked spec file
+newrepo "Fold refuses an untracked spec file"
+mk u "done" 'Issue: none' tasks
+head="$(git rev-parse HEAD)"
+touch openspec/changes/u/notes.md
+fails 1 "$FOLD" u
+rg -qF 'notes.md' "$tmp/err" || fail "stderr lacks notes.md: $(cat "$tmp/err")"
+! rg -q archive "$LOG" || fail "archive ran"
+[ "$(git rev-parse HEAD)" = "$head" ] || fail "HEAD moved"
+
+# Fold ignores an unrelated untracked file
+newrepo "Fold ignores an unrelated untracked file"
+mk o "done" 'Issue: none' tasks
+touch notes.bak
+fails 0 "$FOLD" o
+! git show --name-only --format= HEAD | rg -qF notes.bak || fail "fold commit has notes.bak"
+
 # Fold refuses a malformed Issue line
 newrepo "Fold refuses a malformed Issue line"
 mk m "done" 'Issue: #12' tasks

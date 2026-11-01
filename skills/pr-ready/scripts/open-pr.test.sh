@@ -168,10 +168,23 @@ fails 1 main --title t --body-file "$body"
 [ ! -s "$GH_LOG" ] || fail "gh called"; ! on_remote || fail "pushed"
 
 case_ "Dirty working tree" "feat: a"
-touch untracked
+echo a >tracked && git add tracked && git commit -q -m "feat: tracked"
+echo b >>tracked # unstaged
 fails 1 main --title t --body-file "$body"
 rg -q 'not clean' "$tmp/err" || fail "stderr: $(cat "$tmp/err")"
 [ ! -s "$GH_LOG" ] || fail "gh called"; ! on_remote || fail "pushed"
+git add tracked # staged
+fails 1 main --title t --body-file "$body"
+rg -q 'not clean' "$tmp/err" || fail "stderr: $(cat "$tmp/err")"
+[ ! -s "$GH_LOG" ] || fail "gh called"; ! on_remote || fail "pushed"
+git reset -q --hard
+
+case_ "Untracked file allowed" "feat: a"
+touch untracked
+export STUB_LABELS=type:feat
+run main --title t --body-file "$body"
+assert_log 'pr create'
+! git ls-tree -r --name-only "origin/$branch" | rg -qx untracked || fail "untracked file pushed"
 rm untracked
 
 case_ "Missing title or body" "feat: a"
