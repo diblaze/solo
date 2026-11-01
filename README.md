@@ -78,7 +78,7 @@ openspec/
 A change moves through four states. Each step is a script, never hand edits:
 
 1. **draft**: `new-change.sh <slug>` creates the folder (and `openspec/` on a new repo). The planner fills it; `validate-change.sh` must pass: strict OpenSpec validation, `Status:` and a well-formed `Issue:` line, every scenario named by a task.
-2. **approved**: on your yes, `gh issue create` with label `type:bug|feat|chore`, then `set-status.sh <slug> approved owner/repo#n`. Execute refuses anything else.
+2. **approved**: on your yes, `create-issue.sh <slug>` opens the tracking issue (labelled `type:bug|feat|chore` from the slug prefix, its body the proposal's Why and What Changes) unless the proposal names one, then sets `Status: approved` and `Issue: owner/repo#n`. Execute refuses anything else.
 3. **done**: `set-status.sh <slug> done` refuses while `tasks.md` is missing or has an unticked box. The last slice commit carries `Refs owner/repo#n`.
 4. **archived**: `fold.sh <slug>` in pr-ready applies the deltas to `openspec/specs/`, moves the folder to `archive/`, and commits `docs(spec): fold <slug>` with `Closes owner/repo#n`, so the merge closes the issue.
 
@@ -94,6 +94,7 @@ Skills run these instead of retyping CLI commands, so every run does the same th
 | `skills/plan/scripts/new-change.sh <slug>` | `openspec init` when the repo has none, creates the change, prints its path |
 | `skills/plan/scripts/validate-change.sh <slug>` | Strict validation, `Status:`/`Issue:` checks, every scenario named in quotes by a task |
 | `skills/plan/scripts/read-issue.sh <n\|#n\|url>` | Prints the issue JSON, then `collaborator <login>` or `outsider <login>` per author of the issue and its comments |
+| `skills/plan/scripts/create-issue.sh <slug> [--dry-run]` | Creates the tracking issue from the proposal (title, Why + What Changes body, type label, `@me`) unless it names one, then sets `Status: approved` |
 | `skills/plan/scripts/set-status.sh <slug> <draft\|approved\|done> [owner/repo#n\|none]` | Rewrites the header in `proposal.md`; `done` refuses while a task box is open |
 | `skills/pr-ready/scripts/fold.sh <slug>` | Box, status and clean-tree checks (untracked files outside `openspec/` are ignored), validate, archive, validate living specs, commit `docs(spec): fold <slug>` |
 | `skills/pr-ready/scripts/open-pr.sh <base> --title <t> --body-file <f> [--dry-run]` | Type label from the commits, creates it when missing, pushes, opens or updates the PR assigned to `@me`, refuses a body without `Closes owner/repo#n` |

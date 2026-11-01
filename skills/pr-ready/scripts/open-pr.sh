@@ -41,12 +41,7 @@ while IFS= read -r proposal; do
   [ -z "$issue" ] || rg -qwF "Closes $issue" "$body" || die "body lacks 'Closes $issue' (from $proposal)"
 done < <(git diff --name-only --diff-filter=A "$ref...HEAD" -- 'openspec/changes/archive/*/proposal.md')
 
-write() { if [ -n "$dry" ]; then printf '%q ' "$@"; echo; else "$@" >/dev/null; fi; }
-
-if ! gh label list --search "$label" --json name --jq '.[].name' | rg -qxF "$label"; then
-  case "$kind" in feat) color=0052CC ;; bug) color=0E8A16 ;; chore) color=E99695 ;; esac
-  write gh label create "$label" --color "$color" --description "Conventional commit type: $kind"
-fi
+ensure_label "$kind"
 
 n="$(gh pr list --head "$branch" --json number --jq '.[0].number // empty')"
 # History is rewritten before a PR opens (fixup, autosquash), so every push is a lease push.

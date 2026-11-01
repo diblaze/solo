@@ -15,7 +15,7 @@ The scripts `/solo:pr-ready` runs to finish a branch: fold the change's delta sp
 - Test: `bash skills/pr-ready/scripts/open-pr.test.sh` (`fold.sh` is covered by `skills/plan/scripts/scripts.test.sh`).
 - Both scripts source `skills/plan/scripts/common.sh` (`skills/pr-ready/scripts/fold.sh:8`, `skills/pr-ready/scripts/open-pr.sh:23`).
 - `open-pr.sh` refuses a body missing the archived proposal's `Closes owner/repo#n` (`skills/pr-ready/scripts/open-pr.sh:41`).
-- Every write goes through `write()` so `--dry-run` stays honest (`skills/pr-ready/scripts/open-pr.sh:44`).
+- Every write goes through `write()` so `--dry-run` stays honest (`skills/plan/scripts/common.sh:19`).
 
 ## Dependencies
 - Internal: `skills/plan/scripts/` (`common.sh`, `openspec.sh`).

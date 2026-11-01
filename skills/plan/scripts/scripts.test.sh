@@ -63,10 +63,20 @@ mk() {
   git add -A && git commit -q -m "add $1"
 }
 
+# mkprop <slug> <issue-line> [item…]: a committed draft proposal with Why, What Changes items and Impact.
+mkprop() {
+  local slug="$1" issue="$2"; shift 2
+  mkdir -p "openspec/changes/$slug"
+  { printf '# Proposal\n\nStatus: draft\n%s\n\n## Why\nNeed x.\n\n## What Changes\n' "$issue"
+    [ $# -eq 0 ] || printf '%s\n' "$@"
+    printf '\n## Impact\nNone.\n'; } >"openspec/changes/$slug/proposal.md"
+  git add -A && git commit -q -m "add $slug"
+}
+
 # Traversal slug refused / Flag-like slug refused
 for slug in '../../x' '--help'; do
   newrepo "slug $slug"
-  for cmd in "$S/new-change.sh $slug" "$S/validate-change.sh $slug" "$S/set-status.sh $slug draft" "$FOLD $slug"; do
+  for cmd in "$S/new-change.sh $slug" "$S/validate-change.sh $slug" "$S/set-status.sh $slug draft" "$FOLD $slug" "$S/create-issue.sh $slug"; do
     # shellcheck disable=SC2086
     fails 2 $cmd
     rg -q kebab-case "$tmp/err" || fail "$cmd: stderr lacks kebab-case: $(cat "$tmp/err")"
@@ -208,6 +218,82 @@ for bad in '1; touch INJECTED' 0 '#0' 007 https://github.com/o/r/issues/0 https:
 done
 [ -z "$(find "$tmp" -name INJECTED)" ] || fail "INJECTED was created"
 
+# Issue created on approval
+newrepo "Issue created on approval"
+mkprop add-x 'Issue: none' '- Add x' '- Document x'
+STUB_ISSUE_URL=https://github.com/o/r/issues/5 STUB_LABELS=type:feat fails 0 "$S/create-issue.sh" add-x
+rg -qx 'issue create --title Add x --body-file \S+ --label type:feat --assignee @me' "$GH_LOG" || fail "gh calls: $(cat "$GH_LOG")"
+[ "$(rg -c 'issue create' "$GH_LOG")" -eq 1 ] || fail "issue create count: $(cat "$GH_LOG")"
+for l in '## Why' 'Need x.' '## What Changes' '- Add x' '- Document x'; do rg -qxF -- "$l" "$GH_LOG.body" || fail "body lacks $l: $(cat "$GH_LOG.body")"; done
+! rg -qF 'Impact' "$GH_LOG.body" || fail "body has Impact: $(cat "$GH_LOG.body")"
+[ "$(tail -n1 "$GH_LOG.body")" = 'Change: openspec/changes/add-x/' ] || fail "body end: $(tail -n1 "$GH_LOG.body")"
+rg -qx 'Status: approved' openspec/changes/add-x/proposal.md || fail "status not approved"
+rg -qx 'Issue: o/r#5' openspec/changes/add-x/proposal.md || fail "issue not recorded"
+
+# Change already tracked
+newrepo "Change already tracked"
+mkprop add-y 'Issue: o/r#3' '- Add y'
+fails 0 "$S/create-issue.sh" add-y
+! rg -q 'issue create' "$GH_LOG" || fail "issue created: $(cat "$GH_LOG")"
+rg -qx 'Status: approved' openspec/changes/add-y/proposal.md || fail "status not approved"
+rg -qx 'Issue: o/r#3' openspec/changes/add-y/proposal.md || fail "issue changed"
+
+# Finished change refused
+newrepo "Finished change refused"
+mkprop add-d 'Issue: o/r#3' '- Add d'
+sed -i 's/^Status: draft$/Status: done/' openspec/changes/add-d/proposal.md
+cp openspec/changes/add-d/proposal.md "$tmp/before"
+fails 1 "$S/create-issue.sh" add-d
+rg -q 'Status' "$tmp/err" || fail "stderr lacks Status: $(cat "$tmp/err")"
+cmp -s "$tmp/before" openspec/changes/add-d/proposal.md || fail "proposal changed"
+[ ! -s "$GH_LOG" ] || fail "gh called: $(cat "$GH_LOG")"
+
+# Approved change re-run
+newrepo "Approved change re-run"
+mkprop add-a 'Issue: o/r#3' '- Add a'
+sed -i 's/^Status: draft$/Status: approved/' openspec/changes/add-a/proposal.md
+cp openspec/changes/add-a/proposal.md "$tmp/before"
+fails 0 "$S/create-issue.sh" add-a
+cmp -s "$tmp/before" openspec/changes/add-a/proposal.md || fail "proposal changed"
+[ ! -s "$GH_LOG" ] || fail "gh called: $(cat "$GH_LOG")"
+
+# No What Changes line refused
+newrepo "No What Changes line refused"
+mkprop add-z 'Issue: none'
+fails 1 "$S/create-issue.sh" add-z
+rg -qF 'What Changes' "$tmp/err" || fail "stderr lacks What Changes: $(cat "$tmp/err")"
+! rg -q 'issue create' "$GH_LOG" || fail "issue created"
+rg -qx 'Status: draft' openspec/changes/add-z/proposal.md || fail "status changed"
+
+# Type label follows the slug prefix
+newrepo "Type label follows the slug prefix"
+mkprop fix-y 'Issue: none' '- Fix y'
+mkprop tidy-z 'Issue: none' '- Tidy z'
+STUB_ISSUE_URL=https://github.com/o/r/issues/6 STUB_LABELS=$'type:bug\ntype:chore' fails 0 "$S/create-issue.sh" fix-y
+rg -q 'issue create --title Fix y .*--label type:bug ' "$GH_LOG" || fail "fix-y: $(cat "$GH_LOG")"
+# Any forge host: the issue URL is parsed host-independently.
+STUB_ISSUE_URL=https://forge.example.test/o/r/issues/7 STUB_LABELS=$'type:bug\ntype:chore' fails 0 "$S/create-issue.sh" tidy-z
+rg -q 'issue create --title Tidy z .*--label type:chore ' "$GH_LOG" || fail "tidy-z: $(cat "$GH_LOG")"
+rg -qx 'Issue: o/r#7' openspec/changes/tidy-z/proposal.md || fail "other-host issue not recorded"
+! rg -q 'label create' "$GH_LOG" || fail "label created: $(cat "$GH_LOG")"
+
+# Issue label absent in repository
+newrepo "Issue label absent in repository"
+mkprop add-x 'Issue: none' '- Add x'
+STUB_ISSUE_URL=https://github.com/o/r/issues/5 fails 0 "$S/create-issue.sh" add-x
+rg -q '^label create type:feat ' "$GH_LOG" || fail "label not created: $(cat "$GH_LOG")"
+[ "$(rg -n 'label create' "$GH_LOG" | cut -d: -f1)" -lt "$(rg -n 'issue create' "$GH_LOG" | cut -d: -f1)" ] || fail "label not created before issue"
+
+# Approval dry run
+newrepo "Approval dry run"
+mkprop add-x 'Issue: none' '- Add x'
+cp openspec/changes/add-x/proposal.md "$tmp/before"
+STUB_LABELS=type:feat fails 0 "$S/create-issue.sh" add-x --dry-run
+rg -q 'gh issue create .*--label type:feat --assignee @me' "$tmp/out" || fail "stdout: $(cat "$tmp/out")"
+rg -q 'set-status\.sh add-x approved' "$tmp/out" || fail "stdout lacks set-status: $(cat "$tmp/out")"
+! rg -q 'create' "$GH_LOG" || fail "write made: $(cat "$GH_LOG")"
+cmp -s "$tmp/before" openspec/changes/add-x/proposal.md || fail "proposal changed"
+
 # Run under an inherited GIT_DIR
 newrepo "Run under an inherited GIT_DIR"
 mkdir sub && cd sub
@@ -221,7 +307,7 @@ newrepo "rg absent"
 mk v draft 'Issue: none' tasks
 norg="$tmp/norg"; mkdir -p "$norg"
 for t in bash git dirname env; do ln -sf "$(command -v "$t")" "$norg/$t"; done
-for s in "$S/new-change.sh v" "$S/validate-change.sh v" "$S/set-status.sh v draft" "$FOLD v" "$S/openspec.sh --version" "$S/read-issue.sh 1"; do
+for s in "$S/new-change.sh v" "$S/validate-change.sh v" "$S/set-status.sh v draft" "$FOLD v" "$S/openspec.sh --version" "$S/read-issue.sh 1" "$S/create-issue.sh v"; do
   # shellcheck disable=SC2086
   PATH="$norg" fails 127 $s
   rg -q ripgrep "$tmp/err" || fail "$s: stderr lacks ripgrep: $(cat "$tmp/err")"
