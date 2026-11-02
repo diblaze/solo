@@ -13,13 +13,22 @@ cat >"$tmp/bin/gh" <<'EOF'
 echo "$*" >>"$GH_LOG"
 case "$1 $2" in
   "label list") [ -z "${STUB_LABELS:-}" ] || echo "$STUB_LABELS" ;;
-  "pr list") [ -z "${STUB_PR:-}" ] || echo "$STUB_PR" ;;
+  "pr list") if [[ "$*" == *--base* ]]; then [ -z "${STUB_CHILDREN:-}" ] || echo "$STUB_CHILDREN"
+             else [ -z "${STUB_PR:-}" ] || echo "$STUB_PR"; fi ;;
   "pr view") if [[ "$*" == *"--json labels"* ]]; then [ -z "${STUB_PR_LABELS:-}" ] || echo "$STUB_PR_LABELS"
+             elif [[ "$*" == *"--json state"* ]]; then echo "$STUB_PR_VIEW"
              else echo "https://example.test/pr/${STUB_PR:-1}"; fi ;;
+  "repo view") echo "$STUB_REPO" ;;
+  # The merge moves origin's base to STUB_MERGE_SHA (when set); STUB_MERGE_FAIL makes it fail.
+  "pr merge") [ -z "${STUB_MERGE_FAIL:-}" ] || exit 1
+              [ -z "${STUB_MERGE_SHA:-}" ] || git --git-dir="$STUB_REMOTE" update-ref refs/heads/main "$STUB_MERGE_SHA" ;;
+  # The branch delete removes the head ref; STUB_DELETE_FAIL makes it fail.
+  "api -X") [ -z "${STUB_DELETE_FAIL:-}" ] || exit 1
+            git --git-dir="$STUB_REMOTE" update-ref -d "refs/heads/$STUB_HEAD" 2>/dev/null || true ;;
 esac
 EOF
 chmod +x "$tmp/bin/gh"
-export PATH="$tmp/bin:$PATH" GH_LOG="$tmp/gh.log"
+export PATH="$tmp/bin:$PATH" GH_LOG="$tmp/gh.log" STUB_REMOTE="$tmp/remote"
 
 git init -q --bare "$tmp/remote"
 git init -q -b main "$tmp/repo"
@@ -168,10 +177,23 @@ fails 1 main --title t --body-file "$body"
 [ ! -s "$GH_LOG" ] || fail "gh called"; ! on_remote || fail "pushed"
 
 case_ "Dirty working tree" "feat: a"
-touch untracked
+echo a >tracked && git add tracked && git commit -q -m "feat: tracked"
+echo b >>tracked # unstaged
 fails 1 main --title t --body-file "$body"
 rg -q 'not clean' "$tmp/err" || fail "stderr: $(cat "$tmp/err")"
 [ ! -s "$GH_LOG" ] || fail "gh called"; ! on_remote || fail "pushed"
+git add tracked # staged
+fails 1 main --title t --body-file "$body"
+rg -q 'not clean' "$tmp/err" || fail "stderr: $(cat "$tmp/err")"
+[ ! -s "$GH_LOG" ] || fail "gh called"; ! on_remote || fail "pushed"
+git reset -q --hard
+
+case_ "Untracked file allowed" "feat: a"
+touch untracked
+export STUB_LABELS=type:feat
+run main --title t --body-file "$body"
+assert_log 'pr create'
+! git ls-tree -r --name-only "origin/$branch" | rg -qx untracked || fail "untracked file pushed"
 rm untracked
 
 case_ "Missing title or body" "feat: a"
@@ -186,5 +208,128 @@ case_ "Dry run on a new branch" "feat: a"
 run main --title t --body-file "$body" --dry-run
 [[ "$out" == *"pr create"*"--label type:feat --assignee @me"* ]] || fail "stdout: $out"
 refute_log 'pr create'; refute_log 'label create'; ! on_remote || fail "pushed"
+
+# merge-pr.sh
+merge="$(dirname "$script")/merge-pr.sh"
+line() { rg -n -m1 -- "$1" "$GH_LOG" | cut -d: -f1; }
+view() { # view <state> <isDraft> <mergeable> <mergeStateStatus>: canned pr view for PR 5 from feat/x into main at abc123
+  printf '%s\n' "$1" "$2" "$3" "$4" main feat/x abc123
+}
+mcase() { # mcase <name>: on main, an open mergeable PR 5; repo o/r allows rebase, not squash
+  name="$1"; git checkout -q main; : >"$GH_LOG"
+  STUB_PR_VIEW="$(view OPEN false MERGEABLE CLEAN)"
+  export STUB_PR_VIEW STUB_REPO=$'o/r\nfalse\ntrue' STUB_CHILDREN="" STUB_HEAD=feat/x STUB_MERGE_SHA="" STUB_MERGE_FAIL="" STUB_DELETE_FAIL=""
+}
+mrun() { set +e; out="$("$merge" "$@" 2>"$tmp/err")"; rc=$?; set -e; }
+nowrite() { refute_log 'repo edit'; refute_log 'pr edit'; refute_log 'pr merge'; refute_log 'api -X'; }
+
+mcase "Rebase merge deletes the branch"
+mrun 5
+[ "$rc" -eq 0 ] || fail "exit $rc: $(cat "$tmp/err")"
+[ "$(rg -c '^pr merge' "$GH_LOG")" -eq 1 ] || fail "merge calls: $(cat "$GH_LOG")"
+assert_log '^pr merge 5 --repo o/r --rebase$'
+assert_log '^api -X DELETE repos/o/r/git/refs/heads/feat/x$'
+[ "$(line 'pr merge')" -lt "$(line 'api -X DELETE')" ] || fail "branch deleted before the merge: $(cat "$GH_LOG")"
+refute_log 'repo edit'
+
+mcase "Branch delete failure warns"
+export STUB_DELETE_FAIL=1
+mrun 5
+[ "$rc" -eq 0 ] || fail "exit $rc after a remote merge: $(cat "$tmp/err")"
+rg -q 'warning.*feat/x' "$tmp/err" || fail "no warning: $(cat "$tmp/err")"
+[ "$(rg -c '^pr merge' "$GH_LOG")" -eq 1 ] || fail "merge calls: $(cat "$GH_LOG")"
+
+mcase "Squash merging switched off first"
+export STUB_REPO=$'o/r\ntrue\ntrue'
+mrun 5
+[ "$rc" -eq 0 ] || fail "exit $rc: $(cat "$tmp/err")"
+assert_log '^repo edit --enable-squash-merge=false$'
+[ "$(line 'repo edit')" -lt "$(line 'pr merge')" ] || fail "squash not switched off first: $(cat "$GH_LOG")"
+
+mcase "Child PR retargeted"
+export STUB_CHILDREN="6 feat/y"
+mrun 5
+[ "$rc" -eq 0 ] || fail "exit $rc: $(cat "$tmp/err")"
+assert_log '^pr edit 6 --repo o/r --base main$'
+[ "$(line 'pr merge')" -lt "$(line 'pr edit 6')" ] || fail "child retargeted before the merge: $(cat "$GH_LOG")"
+[ "$(line 'pr edit 6')" -lt "$(line 'api -X DELETE')" ] || fail "branch deleted before the retarget: $(cat "$GH_LOG")"
+[[ "$out" == *"#6"*"git rebase --onto origin/main abc123 feat/y"* ]] || fail "stdout: $out"
+
+mcase "Failed merge leaves children untouched"
+export STUB_CHILDREN="6 feat/y" STUB_MERGE_FAIL=1
+mrun 5
+[ "$rc" -ne 0 ] || fail "exit 0"
+refute_log 'pr edit'; refute_log 'api -X'
+[[ "$out" != *"PR #6 next"* ]] || fail "child steps printed: $out"
+
+mcase "Bad PR number refused"
+for bad in '5; touch INJECTED' 0 007; do
+  mrun "$bad"
+  [ "$rc" -eq 2 ] || fail "$bad: exit $rc"
+  [ ! -s "$GH_LOG" ] || fail "$bad: gh called: $(cat "$GH_LOG")"
+done
+[ -z "$(find "$tmp" -name INJECTED)" ] || fail "INJECTED was created"
+
+mcase "PR not open refused"
+STUB_PR_VIEW="$(view CLOSED false MERGEABLE CLEAN)"
+mrun 5
+[ "$rc" -ne 0 ] || fail "exit 0"
+rg -q CLOSED "$tmp/err" || fail "stderr: $(cat "$tmp/err")"
+nowrite
+
+mcase "Unmergeable PR refused"
+export STUB_REPO=$'o/r\ntrue\ntrue' STUB_CHILDREN="6 feat/y"
+for v in "true MERGEABLE CLEAN:draft" "false CONFLICTING DIRTY:CONFLICTING" "false MERGEABLE BLOCKED:BLOCKED" "false MERGEABLE DIRTY:DIRTY" "false MERGEABLE BEHIND:BEHIND" "false UNKNOWN UNKNOWN:UNKNOWN"; do
+  read -r d m st <<<"${v%%:*}"
+  STUB_PR_VIEW="$(view OPEN "$d" "$m" "$st")"; : >"$GH_LOG"
+  mrun 5
+  [ "$rc" -ne 0 ] || fail "$v: exit 0"
+  rg -q "${v##*:}" "$tmp/err" || fail "$v: stderr: $(cat "$tmp/err")"
+  nowrite
+done
+
+mcase "Rebase merging disabled refused"
+export STUB_REPO=$'o/r\nfalse\nfalse'
+mrun 5
+[ "$rc" -ne 0 ] || fail "exit 0"
+rg -q 'rebase merging' "$tmp/err" || fail "stderr: $(cat "$tmp/err")"
+nowrite
+
+mcase "Merge dry run"
+export STUB_REPO=$'o/r\ntrue\ntrue' STUB_CHILDREN="6 feat/y"
+before="$(git rev-parse main)"
+mrun 5 --dry-run
+[ "$rc" -eq 0 ] || fail "exit $rc: $(cat "$tmp/err")"
+for w in 'gh repo edit --enable-squash-merge=false' 'gh pr edit 6 --repo o/r --base main' 'gh pr merge 5 --repo o/r --rebase' 'gh api -X DELETE repos/o/r/git/refs/heads/feat/x'; do
+  [[ "$out" == *"$w"* ]] || fail "stdout lacks $w: $out"
+done
+[[ "$out" == *"gh pr merge 5"*"gh pr edit 6"*"PR #6 next"*"gh api -X DELETE"* ]] || fail "dry run out of order: $out"
+[[ "$out" != *--delete-branch* ]] || fail "merge still deletes the branch: $out"
+nowrite
+[ "$(git rev-parse main)" = "$before" ] || fail "local main moved"
+
+mcase "Local base fast-forwarded"
+git checkout -q -b merged && git commit -q --allow-empty -m "feat: merged" && sha="$(git rev-parse HEAD)"
+git push -q origin "$sha:refs/heads/merged-tmp" && git checkout -q main && git branch -q -D merged
+# No fetch refspec configured: only an explicit refspec updates origin/main.
+fetchcfg="$(git config --get-all remote.origin.fetch)"; git config --unset-all remote.origin.fetch
+export STUB_MERGE_SHA="$sha"
+mrun 5
+git config remote.origin.fetch "$fetchcfg"
+[ "$rc" -eq 0 ] || fail "exit $rc: $(cat "$tmp/err")"
+[ "$(git rev-parse main)" = "$sha" ] || fail "local main not fast-forwarded"
+
+mcase "Local update failure after merge warns"
+git checkout -q -b remote-side && git commit -q --allow-empty -m "feat: remote side" && rsha="$(git rev-parse HEAD)"
+git push -q origin "$rsha:refs/heads/remote-tmp" && git checkout -q main && git branch -q -D remote-side
+export STUB_MERGE_SHA="$rsha" # the merge moves origin/main to a commit local main lacks
+git commit -q --allow-empty -m "chore: local only"
+local_sha="$(git rev-parse HEAD)"
+mrun 5
+[ "$rc" -eq 0 ] || fail "exit $rc after a remote merge: $(cat "$tmp/err")"
+rg -q 'warning.*main' "$tmp/err" || fail "no warning: $(cat "$tmp/err")"
+[ "$(rg -c '^pr merge' "$GH_LOG")" -eq 1 ] || fail "merge calls: $(cat "$GH_LOG")"
+[ "$(git rev-parse main)" = "$local_sha" ] || fail "local main changed"
+git reset -q --hard "origin/main"
 
 echo "open-pr.test.sh: ok"

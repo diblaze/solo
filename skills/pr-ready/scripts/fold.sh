@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Usage: fold.sh <slug>   (clean tree, on the PR branch)
+# Usage: fold.sh <slug>   (no tracked changes, no untracked files under openspec/, on the PR branch)
 # Folds the change's delta specs into openspec/specs/, archives the change and
 # commits the result as `docs(spec): fold <slug>`.
 set -euo pipefail
@@ -10,7 +10,10 @@ slug_ok "$slug"
 os="$here/openspec.sh"
 dir="openspec/changes/$slug"
 [ -d "$dir" ] || { echo "fold.sh: no $dir" >&2; exit 2; }
-[ -z "$(git status --porcelain)" ] || { echo "fold.sh: working tree not clean; commit or fold fixes first" >&2; exit 1; }
+tracked_clean || { echo "fold.sh: working tree not clean; commit or fold fixes first" >&2; exit 1; }
+# git add -A openspec below would sweep untracked spec files into the fold commit.
+stray="$(git ls-files -o --exclude-standard -- openspec)"
+[ -z "$stray" ] || { printf 'fold.sh: untracked files under openspec/; commit or remove them:\n%s\n' "$stray" >&2; exit 1; }
 
 [ -f "$dir/tasks.md" ] || { echo "fold.sh: no $dir/tasks.md" >&2; exit 1; }
 if rg -n '^\s*- \[ ?\]' "$dir/tasks.md"; then

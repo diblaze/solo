@@ -27,7 +27,7 @@ branch="$(git rev-parse --abbrev-ref HEAD)"
 git fetch -q origin "+refs/heads/$base:refs/remotes/origin/$base" || die "cannot fetch $base from origin"
 ref="origin/$base"
 [ "$(git rev-list --count "$ref..HEAD")" -gt 0 ] || die "no commits ahead of $ref"
-[ -z "$(git status --porcelain)" ] || die "working tree not clean"
+tracked_clean || die "working tree not clean"
 
 subjects="$(git log --format=%s "$ref..HEAD")"
 if rg -q '^feat(\([^)]*\))?!?:' <<<"$subjects"; then kind=feat
@@ -41,12 +41,7 @@ while IFS= read -r proposal; do
   [ -z "$issue" ] || rg -qwF "Closes $issue" "$body" || die "body lacks 'Closes $issue' (from $proposal)"
 done < <(git diff --name-only --diff-filter=A "$ref...HEAD" -- 'openspec/changes/archive/*/proposal.md')
 
-write() { if [ -n "$dry" ]; then printf '%q ' "$@"; echo; else "$@" >/dev/null; fi; }
-
-if ! gh label list --search "$label" --json name --jq '.[].name' | rg -qxF "$label"; then
-  case "$kind" in feat) color=0052CC ;; bug) color=0E8A16 ;; chore) color=E99695 ;; esac
-  write gh label create "$label" --color "$color" --description "Conventional commit type: $kind"
-fi
+ensure_label "$kind"
 
 n="$(gh pr list --head "$branch" --json number --jq '.[0].number // empty')"
 # History is rewritten before a PR opens (fixup, autosquash), so every push is a lease push.
