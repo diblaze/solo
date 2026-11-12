@@ -2,11 +2,17 @@
 name: pr-ready
 description: Pre-PR gate — slop pass, reviewer pass, fix every finding, fold fixes into existing commits, fold the change's delta specs into openspec/specs/ and archive it, then open the PR (merged by rebase, never squash). Use whenever a branch is about to become a PR, or when a PR was opened without this pass. Does not plan or implement features.
 argument-hint: [base branch, default main]
+allowed-tools:
+  - Bash(git status --short --branch)
 ---
 
 # PR ready
 
-Base = `$ARGUMENTS` or `main`. Must be on a non-`main` branch with commits ahead of base.
+Branch state at load:
+
+!`git status --short --branch || true`
+
+Base = `$ARGUMENTS` or `main`. A `fatal:` line above means the session is not in a work tree: move into the branch's worktree first. Must be on a non-`main` branch with commits ahead of base.
 
 ## 1. Slop pass (own code only)
 Invoke `/solo:slop` — scope = `git diff --name-only <base>...HEAD`. Placeholder branches, bare `test.skip` and `.only` are blockers, not notes.

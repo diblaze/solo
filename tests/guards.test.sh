@@ -152,4 +152,22 @@ for f in "${skills[@]}"; do
   ! fm "$f" | awk '/^allowed-tools:/ {f = 1; next} f && /^[^ ]/ {exit} f' | rg -v '^  - Bash\([^)]+\)$' || fail "$f: allowed-tools item is not '  - Bash(...)'"
 done
 
+case="Branch state shown at start"
+for s in execute pr-ready; do
+  rg -qxF '!`git status --short --branch || true`' "$P/skills/$s/SKILL.md" || fail "$s: branch state not injected"
+done
+
+case="Invoked outside a repository"
+out="$(mktemp -d)"
+for f in "${skills[@]}"; do
+  while IFS= read -r c; do
+    r="$(rg -o -r '$1' '^!`([^`]+)`$' "$f" | rg -F -m1 -- "$c")"
+    # shellcheck disable=SC2086
+    o="$(cd "$out" && unset GIT_DIR GIT_WORK_TREE && GIT_CEILING_DIRECTORIES="${out%/*}" bash -c "$r" 2>&1)" \
+      || fail "$f: '$r' fails outside a repository, so the skill would not load"
+    rg -q 'not a git repository' <<<"$o" || fail "$f: '$r' hides git's error outside a repository"
+  done < <(injected "$f")
+done
+rm -rf "$out"
+
 echo "guards.test.sh: ok"
