@@ -158,4 +158,60 @@ out 'gh issue edit 4 --title --dry-run '
 fails 0 "$I" reopen 4 --dry-run
 calls 0
 
+M='repos/{owner}/{repo}/milestones'
+
+start "Ready issues of one type listed"
+STUB_JSON='[{"number":4,"title":"Add x","issueType":{"name":"Feature"},"milestone":{"title":"v1"}},
+            {"number":5,"title":"Fix y","issueType":null,"milestone":null}]' \
+  fails 0 "$I" list --ready --type feat --milestone v1
+rg -qF -- $'issue\tlist\t--limit\t100\t--search\t-is:blocked is:open\t--type\tFeature\t--milestone\tv1\t--json' "$GH_LOG" \
+  || fail "list argv: $(cat "$GH_LOG")"
+out $'#4\tFeature\tv1\tAdd x\n#5\t-\t-\tFix y'
+
+start "All open issues listed"
+fails 0 "$I" list
+! rg -q -- '--search|--type|--milestone' "$GH_LOG" || fail "unasked filter: $(cat "$GH_LOG")"
+fails 2 "$I" list --type feature
+fails 2 "$I" list --closed
+fails 2 "$I" list --limit 0
+calls 1
+
+start "Issue list limit raised"
+fails 0 "$I" list --limit 300
+rg -qF -- $'issue\tlist\t--limit\t300\t--json' "$GH_LOG" || fail "list argv: $(cat "$GH_LOG")"
+
+start "Milestones listed"
+STUB_JSON='[{"number":7,"title":"v1","due_on":"2026-12-01T00:00:00Z","open_issues":2,"closed_issues":1},
+            {"number":8,"title":"v2","due_on":null,"open_issues":0,"closed_issues":0}]' \
+  fails 0 "$I" milestone list
+out $'v1\t2026-12-01\t2 open, 1 closed\nv2\t-\t0 open, 0 closed'
+
+start "Milestone created with due date"
+fails 0 "$I" milestone create v1 --due 2026-12-01
+logged api -X POST "$M" -f title=v1 -f due_on=2026-12-01T12:00:00Z
+fails 0 "$I" milestone create 'no due'
+logged api -X POST "$M" -f 'title=no due'
+
+start "Bad due date refused"
+fails 2 "$I" milestone create v1 --due 'next week'
+fails 2 "$I" milestone create v1 --due 2026-13-41
+fails 2 "$I" milestone create
+fails 2 "$I" milestone open v1
+calls 0
+
+start "Milestone create dry run"
+fails 0 "$I" milestone create v1 --dry-run
+out "gh api -X POST $(printf '%q' "$M") -f title=v1 "
+calls 0
+
+start "Milestone closed by title"
+STUB_JSON='[{"number":8,"title":"v10"},{"number":7,"title":"v1"}]' fails 0 "$I" milestone close v1
+logged api -X PATCH "$M/7" -f state=closed
+! rg -q 'milestones/8' "$GH_LOG" || fail "milestone 8 changed"
+
+start "Unknown milestone close refused"
+STUB_JSON='[{"number":8,"title":"v10"},{"number":7,"title":"v1"}]' fails 1 "$I" milestone close v9
+rg -q 'v9' "$tmp/err" || fail "stderr does not name v9: $(cat "$tmp/err")"
+! rg -q 'PATCH' "$GH_LOG" || fail "a milestone was changed"
+
 echo "issue.test.sh: ok"

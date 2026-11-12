@@ -15,6 +15,11 @@ usage: issue.sh <operation> [--dry-run]      --dry-run goes last
   comment <n> --body-file <f>
   close <n> [--reason completed|not-planned | --duplicate-of <n>]
   reopen <n>
+  list [--ready] [--type feat|bug|chore] [--milestone <title>] [--limit <n>]
+                                    open issues, 100 unless --limit: #n, type, milestone, title
+  milestone list                    open milestones: title, due, issue counts
+  milestone create <title> [--due YYYY-MM-DD]
+  milestone close <title>
 EOF
   exit 2
 }
@@ -111,6 +116,57 @@ case "$op" in
     num "${1:-}"
     [ $# -eq 1 ] || die "reopen takes <n>"
     write gh issue reopen "$n"
+    ;;
+  list)
+    q=() max=100
+    while [ $# -gt 0 ]; do
+      if [ "$1" = --ready ]; then q+=(--search "-is:blocked is:open"); shift; continue; fi
+      val "$@"
+      case "$1" in
+        --type) kind "$2"; q+=(--type "$t") ;;
+        --milestone) q+=(--milestone "$2") ;;
+        --limit) num "$2"; max="$n" ;;
+        *) die "unknown option: $1" ;;
+      esac
+      shift 2
+    done
+    gh issue list --limit "$max" ${q[@]+"${q[@]}"} --json number,title,issueType,milestone \
+      --jq '.[] | "#\(.number)\t\(.issueType.name // "-")\t\(.milestone.title // "-")\t\(.title)"'
+    ;;
+  milestone)
+    api='repos/{owner}/{repo}/milestones'
+    case "${1:-}" in
+      list)
+        [ $# -eq 1 ] || die "milestone list takes no argument"
+        gh api --paginate "$api?state=open&per_page=100" \
+          --jq '.[] | "\(.title)\t\(.due_on // "-" | .[0:10])\t\(.open_issues) open, \(.closed_issues) closed"'
+        ;;
+      create)
+        title="${2:-}" due=()
+        [ -n "$title" ] || die "milestone create needs a title"
+        case $# in
+          2) ;;
+          4)
+            [ "$3" = --due ] && [[ "$4" =~ ^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$ ]] || die "--due takes YYYY-MM-DD"
+            # Noon UTC: GitHub keeps only the day, read in Pacific time, where midnight UTC is the day before.
+            due=(-f "due_on=${4}T12:00:00Z")
+            ;;
+          *) die "milestone create takes <title> [--due YYYY-MM-DD]" ;;
+        esac
+        write gh api -X POST "$api" -f "title=$title" ${due[@]+"${due[@]}"}
+        ;;
+      close)
+        [ $# -eq 2 ] && [ -n "$2" ] || die "milestone close takes <title>"
+        open="$(gh api --paginate "$api?state=open&per_page=100" --jq '.[] | "\(.number)\t\(.title)"')"
+        id=""
+        while IFS=$'\t' read -r number title; do
+          [ "$title" != "$2" ] || id="$number"
+        done <<<"$open"
+        [ -n "$id" ] || { echo "issue.sh: no open milestone titled: $2" >&2; exit 1; }
+        write gh api -X PATCH "$api/$id" -f state=closed
+        ;;
+      *) die "milestone takes list, create or close" ;;
+    esac
     ;;
   *) usage ;;
 esac
