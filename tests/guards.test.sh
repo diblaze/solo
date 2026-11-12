@@ -181,4 +181,47 @@ case="Description in third person"
 case="Use case leads the description"
 ! rg ":description: [\"']?Gate " <<<"$descs" || fail "a description opens with its gate number"
 
+ev="$P/evals"
+# fires <skill>: the exact input_match line of a grader that matches that skill being invoked.
+fires() { printf '%s%s"'"'" $'input_match: \'"skill"\\s*:\\s*"(?:[\\w-]+:)?' "$1"; }
+
+case="Skill without a trigger case refused"
+for d in "$P"/skills/*/; do
+  s="$(basename "$d")" g="$ev/$(basename "$d")/graders/fires.md"
+  [ -f "$ev/$s/prompt.md" ] && [ -f "$g" ] || fail "no trigger case for $s"
+  # Byte for byte: any extra key (min, max, arm) could let the grader pass without the skill firing.
+  [ "$(cat "$g")" = "$(printf -- '---\ntype: tool_used\ntool: Skill\n%s\n---' "$(fires "$s")")" ] || fail "$s: fires.md is not the Skill fired template"
+done
+
+case="Case outside the trigger limits refused"
+for p in "$ev"/*/prompt.md; do
+  h="$(fm "$p")"
+  [ "$(rg -c '^allowed_tools:' <<<"$h")" = 1 ] && rg -qx 'allowed_tools: \[Skill\]' <<<"$h" || fail "$p: grants more than the Skill tool"
+  [ "$(rg -c '^max_turns:' <<<"$h")" = 1 ] && rg -qx 'max_turns: [1-3]' <<<"$h" || fail "$p: max_turns not 1-3"
+  t="$(rg -o -r '$1' '^timeout_seconds: ([0-9]+)$' <<<"$h" || true)"
+  [ -n "$t" ] && [ "$t" -le 120 ] || fail "$p: timeout_seconds missing or over 120"
+done
+
+case="Boundary pair without a guard refused"
+for pair in "slop refactor" "slop review" "refactor review" "investigate research" "investigate gap-analysis" \
+  "research gap-analysis" "plan ship" "docs adr" "docs map" "adr map" "issues plan"; do
+  read -r a b <<<"$pair"
+  [ -f "$ev/$a/graders/not-$b.md" ] || [ -f "$ev/$b/graders/not-$a.md" ] || fail "no guard between $a and $b"
+done
+
+case="Chaining skill without a guard refused"
+# A skill that chains into the expected one would fire it too, so its case must refuse the chaining skill.
+for pair in "slop pr-ready" "slop execute" "review pr-ready" "review execute" "execute ship" "pr-ready ship"; do
+  read -r a b <<<"$pair"
+  [ -f "$ev/$a/graders/not-$b.md" ] || fail "$a case does not refuse $b, which chains into $a"
+done
+
+case="Neighbour grader that can pass on a call refused"
+for g in "$ev"/*/graders/not-*.md; do
+  s="${g##*/not-}" s="${s%.md}"
+  [ -d "$P/skills/$s" ] || fail "$g: no skill named $s"
+  for l in 'type: tool_used' 'tool: Skill' 'min: 0' 'max: 0' 'arm: both'; do rg -qxF "$l" "$g" || fail "$g: missing $l"; done
+  rg -qxF -- "$(fires "$s")" "$g" || fail "$g: does not match skill $s"
+done
+
 echo "guards.test.sh: ok"
