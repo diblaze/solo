@@ -19,7 +19,7 @@ injected() { { rg -o -r '$1' '^!`([^`]+)`$' "$1" || true; } | sed 's/ || true$//
 pr="$P/skills/pr-ready/SKILL.md"
 
 case="Push and PR open ask first"
-! rg -q '^allowed-tools:' "$pr" || fail "pr-ready pre-approves tools"
+[ "$(allowed "$pr")" = "$(injected "$pr" | sed 's/.*/Bash(&)/')" ] || fail "pr-ready pre-approves more than its load-time read"
 s5="$(section "$pr" 5 6)"
 has "$s5" 'open-pr\.sh.*--dry-run'
 has "$s5" 'AskUserQuestion'
@@ -96,7 +96,7 @@ has "$m" 'orphans are removed with `git rm`'
 has "$m" 'shown with its hand-written lines'
 
 case="Directory list approved first"
-! rg -q '^allowed-tools:' <<<"$m" || fail "map pre-approves tools"
+[ "$(allowed "$P/skills/map/SKILL.md")" = 'Bash(${CLAUDE_SKILL_DIR}/scripts/check-map.sh)' ] || fail "map pre-approves more than check-map.sh"
 has "$m" 'AskUserQuestion'
 has "$m" 'Nothing is written before'
 
@@ -122,6 +122,34 @@ for f in "${skills[@]}"; do
     [[ "$t" == '${CLAUDE_SKILL_DIR}/'* ]] || fail "$f: script not named by \${CLAUDE_SKILL_DIR}: $t"
     [ -f "$(dirname "$f")/${t#'${CLAUDE_SKILL_DIR}/'}" ] || fail "$f: no such script: $t"
   done < <(rg -o '[^[:space:]`(]*scripts/[A-Za-z0-9_-]+\.sh' <<<"$b" || true)
+done
+
+# The only calls any skill may pre-approve: its read-only scripts, plus each command it injects at load.
+declare -A READONLY=(
+  [plan]=$'Bash(${CLAUDE_SKILL_DIR}/scripts/read-issue.sh *)\nBash(${CLAUDE_SKILL_DIR}/scripts/validate-change.sh *)'
+  [investigate]='Bash(${CLAUDE_SKILL_DIR}/../plan/scripts/read-issue.sh *)'
+  [execute]='Bash(${CLAUDE_SKILL_DIR}/../plan/scripts/validate-change.sh *)'
+  [issues]=$'Bash(${CLAUDE_SKILL_DIR}/scripts/issue.sh list)\nBash(${CLAUDE_SKILL_DIR}/scripts/issue.sh list *)\nBash(${CLAUDE_SKILL_DIR}/scripts/issue.sh milestone list)'
+  [map]='Bash(${CLAUDE_SKILL_DIR}/scripts/check-map.sh)'
+)
+
+case="Read-only script runs without a prompt"
+for f in "${skills[@]}"; do
+  s="$(basename "$(dirname "$f")")"
+  want="$( { [ -z "${READONLY[$s]:-}" ] || echo "${READONLY[$s]}"; injected "$f" | sed 's/.*/Bash(&)/'; } | sort)"
+  [ "$(allowed "$f" | sort)" = "$want" ] || fail "$s: allowed-tools is not exactly: ${want:-nothing}"
+  while IFS= read -r e; do
+    c="${e#Bash(}" c="${c%)}" c="${c% \*}"
+    rg -qF -- "$c" <<<"$(body "$f")" || fail "$s: allowed $e is not a command in the body"
+  done < <(allowed "$f")
+done
+
+case="State-changing script still asks"
+# Any other way to write allowed-tools (one-line string, flow list, tab or column-0 items) would slip past the list above.
+for f in "${skills[@]}"; do
+  ! fm "$f" | rg -q '^allowed-tools:.*\S' || fail "$f: allowed-tools is not a block list"
+  ! fm "$f" | rg -q '^(- |\t)' || fail "$f: frontmatter list item at column 0 or after a tab"
+  ! fm "$f" | awk '/^allowed-tools:/ {f = 1; next} f && /^[^ ]/ {exit} f' | rg -v '^  - Bash\([^)]+\)$' || fail "$f: allowed-tools item is not '  - Bash(...)'"
 done
 
 echo "guards.test.sh: ok"

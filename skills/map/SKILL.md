@@ -2,6 +2,8 @@
 name: map
 description: Write or refresh a per-directory AGENTS.md map from codebase evidence — a root `## Map` table plus one AGENTS.md (Purpose, Key files, For AI agents, Dependencies) per directory that carries weight. Re-runnable; keeps hand-written lines. Use on a new or inherited repo, or when the layout moved. Does not set the coding standard — use solo:standard. Does not write README, feature or API docs — use solo:docs.
 argument-hint: [repo root, default cwd]
+allowed-tools:
+  - Bash(${CLAUDE_SKILL_DIR}/scripts/check-map.sh)
 ---
 
 # Map

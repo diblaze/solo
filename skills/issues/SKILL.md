@@ -2,6 +2,10 @@
 name: issues
 description: Create, edit, comment on, close, reopen and list GitHub issues and manage milestones through one script, with GitHub issue types and blocked-by dependencies. Use for any issue upkeep outside a change — a new work item, a retype, a milestone, the ready queue. Does not create a change's tracking issue — solo:plan does on approval. Does not read an issue — use plan's `scripts/read-issue.sh`.
 argument-hint: [what to do, e.g. "create a bug for …", "#12 to milestone v1", "ready"]
+allowed-tools:
+  - Bash(${CLAUDE_SKILL_DIR}/scripts/issue.sh list)
+  - Bash(${CLAUDE_SKILL_DIR}/scripts/issue.sh list *)
+  - Bash(${CLAUDE_SKILL_DIR}/scripts/issue.sh milestone list)
 ---
 
 # Issues

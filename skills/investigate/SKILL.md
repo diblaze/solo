@@ -2,6 +2,8 @@
 name: investigate
 description: Evidence-first root-cause hunt for a code bug or failing behavior. Produces E# evidence, root cause, a counter-check, and a fix plan — does not apply the fix (hand to plan/execute). Does not review quality — use solo:review.
 argument-hint: <symptom> | #<issue>
+allowed-tools:
+  - Bash(${CLAUDE_SKILL_DIR}/../plan/scripts/read-issue.sh *)
 ---
 
 # Investigate
