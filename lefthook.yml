@@ -5,7 +5,7 @@ pre-commit:
       glob: "*.sh"
       run: shellcheck -S warning {staged_files}
     - name: tests
-      glob: ["*.sh", "skills/*/SKILL.md", "agents/*.md"]
+      glob: ["*.sh", "skills/*/SKILL.md", "agents/*.md", "evals/**"]
       run: bash skills/plan/scripts/scripts.test.sh && bash skills/pr-ready/scripts/open-pr.test.sh && bash tests/guards.test.sh && bash skills/map/scripts/check-map.test.sh && bash skills/issues/scripts/issue.test.sh
     - name: gitleaks
       run: gitleaks git --pre-commit --staged --redact --no-banner

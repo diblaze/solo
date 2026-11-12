@@ -13,6 +13,7 @@
 | Directory | Purpose |
 | --- | --- |
 | agents/ | Subagent definitions: planner, explorer, implementer, reviewer |
+| evals/ | Trigger-accuracy eval cases, one per skill; run.sh spends model usage |
 | openspec/ | OpenSpec living specs and archived changes (the spec tool owns it) |
 | [skills/](skills/AGENTS.md) | One folder per `/solo:*` skill, with the shared change scripts |
 | [skills/plan/scripts/](skills/plan/scripts/AGENTS.md) | OpenSpec change scripts and the shared `common.sh` |
