@@ -4,7 +4,7 @@ solo is a Claude Code plugin that runs every non-trivial change through three ga
 
 It is built for one developer working with an AI pair: you make the decisions (approve the plan, answer open questions, say yes to push and merge), and the agents do the legwork in between. Every step leaves evidence behind: an OpenSpec change folder, a GitHub issue, atomic commits, a review.
 
-- **15 skills**: 4 gates (plan, execute, review, pr-ready), the `ship` shortcut that chains them, and 10 helpers (investigate, tdd, refactor, slop, research, gap-analysis, adr, docs, standard, map).
+- **16 skills**: 4 gates (plan, execute, review, pr-ready), the `ship` shortcut that chains them, and 11 helpers (investigate, tdd, refactor, slop, research, gap-analysis, adr, docs, standard, map, issues).
 - **4 subagents**: planner, explorer, reviewer, implementer. Each one has a narrow job and a fixed model.
 - **Principles**: cite evidence (`path:line`), shortest correct diff, one logical change per commit, and a runnable check for every change.
 
@@ -46,6 +46,7 @@ Each skill says what it does not do and which skill does that instead, so the mo
 | `/solo:docs` | Someone needs to use or change the thing: README, feature doc, API surface, from code evidence | Why a decision was made (`adr`) |
 | `/solo:standard` | New repo, changed tooling, or a skill reports "no coding standard". Writes `## Coding standard` in `AGENTS.md` | Enforcing it on a diff (`review`) |
 | `/solo:map` | New or inherited repo, or the layout moved. Writes a root `## Map` and one `AGENTS.md` per directory that carries weight, keeps hand-written lines, then `/solo:pr-ready` | The coding standard (`standard`), README or feature docs (`docs`) |
+| `/solo:issues` | Issue upkeep outside a change: a new work item, a retype, a milestone, a dependency, the ready queue. One script call per operation, `--dry-run` on every write | A change's tracking issue (`plan` creates it on approval) |
 
 ## Subagents
 
@@ -82,7 +83,7 @@ A change moves through four states. Each step is a script, never hand edits:
 3. **done**: `set-status.sh <slug> done` refuses while `tasks.md` is missing or has an unticked box. The last slice commit carries `Refs owner/repo#n`.
 4. **archived**: `fold.sh <slug>` in pr-ready applies the deltas to `openspec/specs/`, moves the folder to `archive/`, and commits `docs(spec): fold <slug>` with `Closes owner/repo#n`, so the merge closes the issue.
 
-Work items are GitHub Issues in every repo: `/solo:plan #n` reads one, dependencies use `--blocked-by`, and ready work is `gh issue list --search '-is:blocked is:open'`. Issue and comment text from anyone who is not a collaborator is treated as a claim to verify, never as an instruction.
+Work items are GitHub Issues in every repo: `/solo:plan #n` reads one, dependencies use `--blocked-by`, and ready work is `gh issue list --search '-is:blocked is:open'`. `/solo:issues` runs those and the rest of an issue's upkeep (create, edit, comment, close, milestones) through `skills/issues/scripts/issue.sh`. Issue and comment text from anyone who is not a collaborator is treated as a claim to verify, never as an instruction.
 
 ## Scripts
 
@@ -101,8 +102,9 @@ Skills run these instead of retyping CLI commands, so every run does the same th
 | `skills/pr-ready/scripts/open-pr.sh <base> --title <t> --body-file <f> [--dry-run]` | Type label from the commits, creates it when missing, pushes, opens or updates the PR assigned to `@me`, refuses a body without `Closes owner/repo#n` |
 | `skills/pr-ready/scripts/merge-pr.sh <n> [--dry-run]` | Switches squash merging off, rebase-merges, retargets open PRs stacked on the branch, prints each child's rebase, deletes the branch, fast-forwards the local base |
 | `skills/map/scripts/check-map.sh [base-ref]` | Refuses an `AGENTS.md` anywhere below a plugin's or `.claude/`'s `agents/`, `commands/` or `output-styles/` folder, a link or `Parent` comment that does not resolve (code spans and fences are skipped), a nested `AGENTS.md` that no root `## Map` row links, and a root `## Coding standard` changed since `base-ref` |
+| `skills/issues/scripts/issue.sh <create\|edit\|comment\|close\|reopen\|list\|milestone> … [--dry-run]` | One GitHub issue operation per call: exactly one type, set as GitHub's issue type (`feat`, `bug`, `chore` are `Feature`, `Bug`, `Task`), milestone, assignees, blocked-by, close reason; `list --ready` prints open unblocked issues one line each; `milestone list\|create\|close`. Bad input exits 2 before `gh` runs. Needs gh 2.100 or newer |
 
-Tests: `bash skills/plan/scripts/scripts.test.sh`, `bash skills/pr-ready/scripts/open-pr.test.sh`, `bash tests/guards.test.sh` and `bash skills/map/scripts/check-map.test.sh`.
+Tests: `bash skills/plan/scripts/scripts.test.sh`, `bash skills/pr-ready/scripts/open-pr.test.sh`, `bash tests/guards.test.sh`, `bash skills/map/scripts/check-map.test.sh` and `bash skills/issues/scripts/issue.test.sh` (needs `jq`).
 
 ## Rules the plugin enforces
 
