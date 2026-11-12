@@ -4,12 +4,17 @@ description: Gate 2 of plan → execute → review. Implements an approved OpenS
 argument-hint: <change slug or path>
 allowed-tools:
   - Bash(${CLAUDE_SKILL_DIR}/../plan/scripts/validate-change.sh *)
+  - Bash(git status --short --branch)
 ---
 
 # Execute
 
+Branch state at load:
+
+!`git status --short --branch || true`
+
 1. Read the change: `proposal.md`, every `specs/**/spec.md`, `design.md`, `tasks.md`. `Status: approved` in `proposal.md` required; otherwise stop and say so. The delta specs are the contract; tasks are the route.
-2. Re-check cwd + `git status --short --branch` — right repo, right branch, clean tree or known state. On `main`/`master` → branch first: `git switch -c <type>/<slug>`. Always; gates apply to every non-one-liner.
+2. Check cwd and the branch state above (a `fatal:` line there means the session is not in a work tree: move into the change's worktree first; after a resume or compaction, re-run `git status --short --branch`) — right repo, right branch, clean tree or known state. On `main`/`master` → branch first: `git switch -c <type>/<slug>`. Always; gates apply to every non-one-liner.
 3. Read the repo's `AGENTS.md` `## Coding standard` if present — runner, package manager, style rules. None → lockfile is law (`uv.lock`→uv, `pnpm-lock.yaml`→pnpm, `yarn.lock`→yarn, `package-lock.json`→npm, `go.mod`→go, `pubspec.yaml`→flutter). Never mix managers.
 4. Work `tasks.md` top to bottom, exactly. Tick each box (`- [x]`) the moment its verification passes, not in a batch at the end. A test task comes before the code it proves: write it, watch it fail, then make it pass. Mid-way discovery that changes behavior → update the delta spec and tasks first (`${CLAUDE_SKILL_DIR}/../plan/scripts/validate-change.sh <slug>` still exits 0), then continue; say what changed. A discovery that changes a requirement's meaning → stop and ask.
 

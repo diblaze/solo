@@ -26,7 +26,7 @@ One folder per `/solo:*` skill. Each holds a `SKILL.md` (frontmatter `name` and 
 
 ## For AI agents
 - Test: `lefthook run pre-push --all-files`.
-- Skills run CLI steps through scripts (their own or `plan/scripts/`), never retyped commands (`skills/plan/SKILL.md:9`, `skills/execute/SKILL.md:34`).
+- Skills run CLI steps through scripts (their own or `plan/scripts/`), never retyped commands (`skills/plan/SKILL.md:12`, `skills/execute/SKILL.md:41`).
 - Skill text is guarded by `tests/guards.test.sh`; a reworded rule may need its case updated there (`tests/guards.test.sh:2`).
 
 ## Dependencies
