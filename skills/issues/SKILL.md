@@ -6,7 +6,7 @@ argument-hint: [what to do, e.g. "create a bug for …", "#12 to milestone v1", 
 
 # Issues
 
-Every step is `scripts/issue.sh` (under the base directory shown when the skill loads); run it, never a retyped `gh` command. It checks input before `gh` runs (exit 2 names what is wrong), works from anywhere inside the repo and needs gh 2.100 or newer. `--dry-run` as the last argument of any write prints the `gh` calls instead of making them.
+Every step is `${CLAUDE_SKILL_DIR}/scripts/issue.sh`, written `issue.sh` in the table; run it, never a retyped `gh` command. It checks input before `gh` runs (exit 2 names what is wrong), works from anywhere inside the repo and needs gh 2.100 or newer. `--dry-run` as the last argument of any write prints the `gh` calls instead of making them.
 
 | Want | Run |
 | --- | --- |
@@ -17,8 +17,8 @@ Every step is `scripts/issue.sh` (under the base directory shown when the skill 
 | comment | `issue.sh comment <n> --body-file <f>` |
 | close | `issue.sh close <n> [--reason completed\|not-planned \| --duplicate-of <m>]` |
 | reopen | `issue.sh reopen <n>` |
-| ready queue | `issue.sh list --ready [--type <t>] [--milestone <title>] [--limit <n>]` — open and unblocked; without `--ready`, every open issue. Lines: `#n`, type, milestone, title, tab-separated |
-| milestones | `issue.sh milestone list`, `issue.sh milestone create <title> [--due YYYY-MM-DD]`, `issue.sh milestone close <title>` |
+| ready queue | `${CLAUDE_SKILL_DIR}/scripts/issue.sh list --ready [--type <t>] [--milestone <title>] [--limit <n>]` — open and unblocked; without `--ready`, every open issue. Lines: `#n`, type, milestone, title, tab-separated |
+| milestones | `${CLAUDE_SKILL_DIR}/scripts/issue.sh milestone list`, `issue.sh milestone create <title> [--due YYYY-MM-DD]`, `issue.sh milestone close <title>` |
 
 1. Type: `feat` adds a capability, `bug` is something broken, `chore` is everything else. The script sets them as GitHub's issue types `Feature`, `Bug` and `Task`, never as labels; `list` prints those names. One type per issue. The request does not say which and the text does not settle it → ask.
 2. Title and body text always come from the user's words or from evidence you cite. Write a body or comment to a file in the scratch directory and pass `--body-file`; never inline it in the command. One problem per issue: two asks → two issues, linked with `--add-blocked-by` when one waits on the other.

@@ -9,6 +9,12 @@ section() {
   if [ -n "${3:-}" ]; then sed -n "/^## $2/,/^## $3/p" "$1"; else sed -n "/^## $2/,\$p" "$1"; fi
 }
 has() { rg -q -- "$2" <<<"$1" || fail "missing /$2/"; }
+# fm <file>: the frontmatter lines; body <file>: the lines after it; allowed <file>: its allowed-tools entries.
+fm() { awk 'NR == 1 && /^---$/ {f = 1; next} f && /^---$/ {exit} f' "$1"; }
+body() { awk 'c >= 2 {print} /^---$/ && c < 2 {c++}' "$1"; }
+allowed() { fm "$1" | awk '/^allowed-tools:/ {f = 1; next} f && /^[^ ]/ {exit} f' | sed -E 's/^[[:space:]]*-[[:space:]]*//'; }
+# injected <file>: each load-time command, with the `|| true` that keeps a failure from aborting the load cut off.
+injected() { { rg -o -r '$1' '^!`([^`]+)`$' "$1" || true; } | sed 's/ || true$//'; }
 
 pr="$P/skills/pr-ready/SKILL.md"
 
@@ -105,5 +111,17 @@ case="Repo with CLAUDE.md warned"
 has "$m" 'claude-md-and-agents-md'
 has "$m" 'delete .*CLAUDE\.md'
 has "$m" 'only on a yes'
+
+skills=("$P"/skills/*/SKILL.md)
+
+case="Script path is exact"
+for f in "${skills[@]}"; do
+  b="$(body "$f")"
+  ! rg -q 'base directory' <<<"$b" || fail "$f: still says base directory"
+  while IFS= read -r t; do
+    [[ "$t" == '${CLAUDE_SKILL_DIR}/'* ]] || fail "$f: script not named by \${CLAUDE_SKILL_DIR}: $t"
+    [ -f "$(dirname "$f")/${t#'${CLAUDE_SKILL_DIR}/'}" ] || fail "$f: no such script: $t"
+  done < <(rg -o '[^[:space:]`(]*scripts/[A-Za-z0-9_-]+\.sh' <<<"$b" || true)
+done
 
 echo "guards.test.sh: ok"

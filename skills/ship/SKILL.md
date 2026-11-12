@@ -11,7 +11,7 @@ Same gates, one invocation. Nothing here is a shortcut past a gate; it removes t
 1. `$ARGUMENTS` may be `#n` — plan reads the issue. Bug symptom rather than a change request → `/solo:investigate` first; its plan feeds step 2.
 2. `/solo:plan $ARGUMENTS`. The planner runs once, on Opus unless you approve Fable when plan asks. Show the change path + 3-line summary + requirement names + `## Open Questions`.
 3. **Pause.** AskUserQuestion: approve / revise / drop. Open questions that change specs or tasks must be answered here; do not guess them. Revise → one SendMessage to the planner with the specific defect, then re-ask. Drop → stop, delete the change folder.
-4. On approve run `../plan/scripts/create-issue.sh <slug>` (path relative to this skill's base directory): it creates the tracking issue unless the proposal names one, and sets `Status: approved`. Then `/solo:execute <slug>`. That already branches, implements, runs the check, slop pass, `/solo:review`, and commits.
+4. On approve run `${CLAUDE_SKILL_DIR}/../plan/scripts/create-issue.sh <slug>`: it creates the tracking issue unless the proposal names one, and sets `Status: approved`. Then `/solo:execute <slug>`. That already branches, implements, runs the check, slop pass, `/solo:review`, and commits.
 5. Stop conditions inside execute — surface, do not push through:
    - check fails after the fix attempt → show output, ask
    - reviewer CRIT you cannot resolve → show it, ask

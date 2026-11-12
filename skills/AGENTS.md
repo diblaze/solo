@@ -2,7 +2,7 @@
 # skills/
 
 ## Purpose
-One folder per `/solo:*` skill. Each holds a `SKILL.md` (frontmatter `name` and `description`, then the steps) and, where a step needs a CLI, a `scripts/` folder that the skill runs by path from its base directory. The gate skills chain as plan, execute, review, pr-ready; the rest are helpers called inside or around those gates.
+One folder per `/solo:*` skill. Each holds a `SKILL.md` (frontmatter `name` and `description`, then the steps) and, where a step needs a CLI, a `scripts/` folder that the skill runs by its exact `${CLAUDE_SKILL_DIR}` path; read-only calls are listed in `allowed-tools`. The gate skills chain as plan, execute, review, pr-ready; the rest are helpers called inside or around those gates.
 
 ## Key files
 | File | Purpose |
