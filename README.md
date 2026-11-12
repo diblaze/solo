@@ -103,8 +103,9 @@ Skills run these instead of retyping CLI commands, so every run does the same th
 | `skills/pr-ready/scripts/merge-pr.sh <n> [--dry-run]` | Switches squash merging off, rebase-merges, retargets open PRs stacked on the branch, prints each child's rebase, deletes the branch, fast-forwards the local base |
 | `skills/map/scripts/check-map.sh [base-ref]` | Refuses an `AGENTS.md` anywhere below a plugin's or `.claude/`'s `agents/`, `commands/` or `output-styles/` folder, a link or `Parent` comment that does not resolve (code spans and fences are skipped), a nested `AGENTS.md` that no root `## Map` row links, and a root `## Coding standard` changed since `base-ref` |
 | `skills/issues/scripts/issue.sh <create\|edit\|comment\|close\|reopen\|list\|milestone> … [--dry-run]` | One GitHub issue operation per call: exactly one type, set as GitHub's issue type (`feat`, `bug`, `chore` are `Feature`, `Bug`, `Task`), milestone, assignees, blocked-by, close reason; `list --ready` prints open unblocked issues one line each; `milestone list\|create\|close`. Bad input exits 2 before `gh` runs. Needs gh 2.100 or newer |
+| `evals/run.sh [--case <glob>] [--runs <n>] [--model <m>]` | Runs the skill trigger suite in `evals/` (one case per skill, zero-call guards on overlapping neighbours): one arm, report kept local, list-price ceiling `SOLO_EVAL_MAX_USD` (default 5), shell, write, web and subagent tools withheld. Spends model usage (16 cases × 3 runs by default); iterate with `--case <skill> --runs 1`. Pin `--model` when comparing two runs |
 
-Tests: `bash skills/plan/scripts/scripts.test.sh`, `bash skills/pr-ready/scripts/open-pr.test.sh`, `bash tests/guards.test.sh`, `bash skills/map/scripts/check-map.test.sh` and `bash skills/issues/scripts/issue.test.sh` (needs `jq`).
+Tests: `bash skills/plan/scripts/scripts.test.sh`, `bash skills/pr-ready/scripts/open-pr.test.sh`, `bash tests/guards.test.sh`, `bash skills/map/scripts/check-map.test.sh` and `bash skills/issues/scripts/issue.test.sh` (needs `jq`). The eval suite (`bash evals/run.sh`) is not a test: it calls the model and runs only by hand.
 
 ## Rules the plugin enforces
 
@@ -160,6 +161,7 @@ Install the tools once: `go install github.com/evilmartians/lefthook/v2@v2.2.2`,
 - **pre-commit**: `shellcheck` on staged scripts, the three test suites when scripts, skills or agents change, and `gitleaks` on the staged diff.
 - **pre-push**: `shellcheck` on every script, the test suites, and `gitleaks` over the history.
 - **CI** (`.github/workflows/ci.yml`) runs the same checks plus `actionlint` and `claude plugin validate --strict`. The coding standard is in [AGENTS.md](AGENTS.md).
+- **Evals**: `bash evals/run.sh` is manual and paid. No hook or CI job runs it; `tests/guards.test.sh` fails if one does.
 
 ## License
 
