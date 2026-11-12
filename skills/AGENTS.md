@@ -11,6 +11,7 @@ One folder per `/solo:*` skill. Each holds a `SKILL.md` (frontmatter `name` and 
 | docs/ | README, feature or API docs from codebase evidence |
 | execute/ | Gate 2: implement an approved OpenSpec change, review, commit |
 | gap-analysis/ | Compare what exists against what was specified |
+| issues/ | GitHub issue and milestone upkeep through `scripts/issue.sh` |
 | investigate/ | Evidence-first root-cause hunt; emits a fix plan |
 | map/ | Per-directory AGENTS.md map, checked by `scripts/check-map.sh` |
 | plan/ | Gate 1: dispatch the planner; holds the shared change scripts |
