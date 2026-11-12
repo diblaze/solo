@@ -134,3 +134,45 @@ The system SHALL accept `--dry-run` as the last argument of every write, print e
 - **GIVEN** a repository and issue 4 of type `Bug`
 - **WHEN** an issue of type `feat` is created, issue 4's type is set to `feat`, and issue 4 is closed, each with `--dry-run`
 - **THEN** each exits 0 and prints its `gh issue create`, `gh issue edit` and `gh issue close` write lines, and no write reaches the forge
+
+### Requirement: Tracking issue type follows the slug
+The system SHALL give the tracking issue the forge's issue type `Bug` for a slug starting `fix-`, `Feature` for one starting `add-`, and `Task` otherwise, and SHALL NOT read or write a label for it.
+
+#### Scenario: Type follows the slug prefix
+- **GIVEN** draft changes `fix-y` and `tidy-z`, both with `Issue: none`
+- **WHEN** each is approved
+- **THEN** `fix-y`'s issue has issue type `Bug`, `tidy-z`'s has `Task`, and no label is read or written
+
+## MODIFIED Requirements
+
+### Requirement: Approved change gets a tracking issue
+The system SHALL, when a change is approved and its proposal says `Issue: none`, create an issue titled with the first What Changes line, with a body that copies the proposal's `## Why` and `## What Changes` sections and ends with `Change: openspec/changes/<slug>/`, the forge's issue type and the approver as assignee, then record it as `Issue: owner/repo#n` with `Status: approved`. A proposal that already names an issue SHALL be approved without creating another.
+
+#### Scenario: Issue created on approval
+- **GIVEN** a draft change `add-x` with `Issue: none`, Why text `Need x.` and What Changes lines `- Add x` and `- Document x`
+- **WHEN** it is approved and the forge returns issue `https://github.com/o/r/issues/5`
+- **THEN** one issue is created with title `Add x`, a body holding `## Why`, `Need x.`, `## What Changes`, `- Add x`, `- Document x` and ending with `Change: openspec/changes/add-x/`, issue type `Feature` and assignee `@me`, and the proposal reads `Status: approved` and `Issue: o/r#5`
+
+#### Scenario: Change already tracked
+- **GIVEN** a draft change whose proposal says `Issue: o/r#3`
+- **WHEN** it is approved
+- **THEN** no issue is created and the proposal reads `Status: approved` and `Issue: o/r#3`
+
+#### Scenario: No What Changes line refused
+- **GIVEN** a draft change with `Issue: none` and no list item under What Changes
+- **WHEN** it is approved
+- **THEN** it exits non-zero naming What Changes, no issue is created and the proposal still says `Status: draft`
+
+### Requirement: Issue creation dry run
+The system SHALL accept `--dry-run` on approval, print each forge write and the status update it would make, and SHALL NOT call any forge write or change the proposal.
+
+#### Scenario: Approval dry run
+- **GIVEN** a draft change `add-x` with `Issue: none`
+- **WHEN** it is approved with `--dry-run`
+- **THEN** it exits 0, prints a `gh issue create … --type Feature --assignee @me` line, no issue is created and the proposal is unchanged
+
+## REMOVED Requirements
+
+### Requirement: Issue type label follows the slug
+**Reason**: Issues carry the forge's issue type; `type:*` labels stay on pull requests only, which have no issue type.
+**Migration**: "Tracking issue type follows the slug" replaces it. Set the type on older issues with `issue.sh edit <n> --type feat|bug|chore`.

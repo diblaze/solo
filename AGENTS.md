@@ -6,7 +6,7 @@
 - Tests: `bash skills/plan/scripts/scripts.test.sh`, `bash skills/pr-ready/scripts/open-pr.test.sh`, `bash tests/guards.test.sh`, `bash skills/map/scripts/check-map.test.sh`, `bash skills/issues/scripts/issue.test.sh` (needs `jq`). Throwaway git repos in `mktemp -d`, stubs on `PATH` for `openspec`, `npx` and `gh`, and `unset GIT_DIR …` at the top of any harness that makes its own repo.
 - Style: scripts use `set -euo pipefail`, `rg` (never grep) and quoted paths; shared checks live in `skills/plan/scripts/common.sh`.
 - Language: code, commits and docs English.
-- Tracking: GitHub Issues. Labels `type:bug|feat|chore`. The last slice commit carries `Refs owner/repo#n`; the spec-fold commit carries `Closes owner/repo#n`.
+- Tracking: GitHub Issues. Issue types `Bug|Feature|Task` on issues, labels `type:bug|feat|chore` on PRs. The last slice commit carries `Refs owner/repo#n`; the spec-fold commit carries `Closes owner/repo#n`.
 - Don't: commit personal names, domains, hostnames, private IPs or home-directory paths — in files, commit messages, issues or PRs.
 
 ## Map
