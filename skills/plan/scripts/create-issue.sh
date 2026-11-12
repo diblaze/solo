@@ -2,7 +2,7 @@
 # Usage: create-issue.sh <slug> [--dry-run]
 # On approval: creates the change's tracking issue, then sets Status: approved and Issue: owner/repo#n.
 # Title = first What Changes item; body = the proposal's Why and What Changes plus the change path;
-# label type:bug|feat|chore from the slug prefix; assigned to @me. A proposal that already names
+# issue type Bug|Feature|Task from the slug prefix; assigned to @me. A proposal that already names
 # an issue is only approved. --dry-run prints the writes and the status update instead.
 set -euo pipefail
 usage() { echo "usage: create-issue.sh <slug> [--dry-run]" >&2; exit 2; }
@@ -26,14 +26,13 @@ fi
 if [ -z "$issue" ]; then
   title="$(awk '/^## /{on = ($0 == "## What Changes"); next} on && /^- /{sub(/^- /, ""); print; exit}' "$prop")"
   [ -n "$title" ] || { echo "create-issue.sh: no '- ' item under ## What Changes in $prop" >&2; exit 1; }
-  case "$slug" in fix-*) kind=bug ;; add-*) kind=feat ;; *) kind=chore ;; esac
+  case "$slug" in fix-*) kind=Bug ;; add-*) kind=Feature ;; *) kind=Task ;; esac
   body="$(mktemp)"
   trap 'rm -f "$body"' EXIT
   # The proposal stays the source; the body lets contributors without the change folder see the plan.
   awk '/^## /{on = ($0 == "## Why" || $0 == "## What Changes")} on' "$prop" >"$body"
   printf '\nChange: openspec/changes/%s/\n' "$slug" >>"$body"
-  ensure_label "$kind"
-  args=(gh issue create --title "$title" --body-file "$body" --label "type:$kind" --assignee @me)
+  args=(gh issue create --title "$title" --body-file "$body" --type "$kind" --assignee @me)
   if [ -n "$dry" ]; then
     write "${args[@]}"
     issue="<owner/repo#n>"

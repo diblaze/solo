@@ -12,5 +12,9 @@
 - [x] 3.1 Add `skills/issues/SKILL.md`: frontmatter `name: issues`, a short description of what it does plus "Does not create a change's tracking issue — solo:plan does on approval. Does not read an issue — use plan's `scripts/read-issue.sh`." (E19); one line per subcommand of `scripts/issue.sh`; bodies always from a file; the consent rule from the design (E13, E17). Verify: `bash tests/guards.test.sh && claude plugin validate --strict .` (or the CI `npx` line).
 - [x] 3.2 Docs and manifests: row in `skills/AGENTS.md` Key files (E13); `README.md:7` count 16 skills / 11 helpers, Skill reference row, Scripts table row for `issue.sh`, Tests line (E14); `.claude-plugin/plugin.json` version 2.2.0 and description, `.claude-plugin/marketplace.json:10` skill list (E15). Verify: `bash skills/map/scripts/check-map.sh`.
 
-## 4. Check
-- [x] 4.1 `lefthook run pre-push --all-files && bash skills/map/scripts/check-map.sh`
+## 4. Tracking issue uses the issue type
+- [x] 4.1 In `skills/plan/scripts/scripts.test.sh` change the create-issue cases (E3, E20): `Issue created on approval` proves "Issue created on approval" (`--type Feature`, no `--label`); `Type follows the slug prefix` proves "Type follows the slug prefix" (`--type Bug`, `--type Task`, no `label` call) and replaces the label-absent case; `Approval dry run` proves "Approval dry run" (`--type Feature` in the printed line); "Change already tracked" and "No What Changes line refused" keep their cases. Verify: the changed cases fail.
+- [x] 4.2 `skills/plan/scripts/create-issue.sh`: issue type `Bug|Feature|Task` from the slug prefix through `--type`, no `ensure_label` (E3, E20). Text: `skills/plan/SKILL.md:16`, `skills/standard/SKILL.md:35`, root `AGENTS.md:9`, `README.md:82,98`. Verify: `bash skills/plan/scripts/scripts.test.sh && bash tests/guards.test.sh`.
+
+## 5. Check
+- [x] 5.1 `lefthook run pre-push --all-files && bash skills/map/scripts/check-map.sh`

@@ -221,8 +221,8 @@ done
 # Issue created on approval
 newrepo "Issue created on approval"
 mkprop add-x 'Issue: none' '- Add x' '- Document x'
-STUB_ISSUE_URL=https://github.com/o/r/issues/5 STUB_LABELS=type:feat fails 0 "$S/create-issue.sh" add-x
-rg -qx 'issue create --title Add x --body-file \S+ --label type:feat --assignee @me' "$GH_LOG" || fail "gh calls: $(cat "$GH_LOG")"
+STUB_ISSUE_URL=https://github.com/o/r/issues/5 fails 0 "$S/create-issue.sh" add-x
+rg -qx 'issue create --title Add x --body-file \S+ --type Feature --assignee @me' "$GH_LOG" || fail "gh calls: $(cat "$GH_LOG")"
 [ "$(rg -c 'issue create' "$GH_LOG")" -eq 1 ] || fail "issue create count: $(cat "$GH_LOG")"
 for l in '## Why' 'Need x.' '## What Changes' '- Add x' '- Document x'; do rg -qxF -- "$l" "$GH_LOG.body" || fail "body lacks $l: $(cat "$GH_LOG.body")"; done
 ! rg -qF 'Impact' "$GH_LOG.body" || fail "body has Impact: $(cat "$GH_LOG.body")"
@@ -265,31 +265,24 @@ rg -qF 'What Changes' "$tmp/err" || fail "stderr lacks What Changes: $(cat "$tmp
 ! rg -q 'issue create' "$GH_LOG" || fail "issue created"
 rg -qx 'Status: draft' openspec/changes/add-z/proposal.md || fail "status changed"
 
-# Type label follows the slug prefix
-newrepo "Type label follows the slug prefix"
+# Type follows the slug prefix
+newrepo "Type follows the slug prefix"
 mkprop fix-y 'Issue: none' '- Fix y'
 mkprop tidy-z 'Issue: none' '- Tidy z'
-STUB_ISSUE_URL=https://github.com/o/r/issues/6 STUB_LABELS=$'type:bug\ntype:chore' fails 0 "$S/create-issue.sh" fix-y
-rg -q 'issue create --title Fix y .*--label type:bug ' "$GH_LOG" || fail "fix-y: $(cat "$GH_LOG")"
+STUB_ISSUE_URL=https://github.com/o/r/issues/6 fails 0 "$S/create-issue.sh" fix-y
+rg -q 'issue create --title Fix y .*--type Bug ' "$GH_LOG" || fail "fix-y: $(cat "$GH_LOG")"
 # Any forge host: the issue URL is parsed host-independently.
-STUB_ISSUE_URL=https://forge.example.test/o/r/issues/7 STUB_LABELS=$'type:bug\ntype:chore' fails 0 "$S/create-issue.sh" tidy-z
-rg -q 'issue create --title Tidy z .*--label type:chore ' "$GH_LOG" || fail "tidy-z: $(cat "$GH_LOG")"
+STUB_ISSUE_URL=https://forge.example.test/o/r/issues/7 fails 0 "$S/create-issue.sh" tidy-z
+rg -q 'issue create --title Tidy z .*--type Task ' "$GH_LOG" || fail "tidy-z: $(cat "$GH_LOG")"
 rg -qx 'Issue: o/r#7' openspec/changes/tidy-z/proposal.md || fail "other-host issue not recorded"
-! rg -q 'label create' "$GH_LOG" || fail "label created: $(cat "$GH_LOG")"
-
-# Issue label absent in repository
-newrepo "Issue label absent in repository"
-mkprop add-x 'Issue: none' '- Add x'
-STUB_ISSUE_URL=https://github.com/o/r/issues/5 fails 0 "$S/create-issue.sh" add-x
-rg -q '^label create type:feat ' "$GH_LOG" || fail "label not created: $(cat "$GH_LOG")"
-[ "$(rg -n 'label create' "$GH_LOG" | cut -d: -f1)" -lt "$(rg -n 'issue create' "$GH_LOG" | cut -d: -f1)" ] || fail "label not created before issue"
+! rg -q '^label ' "$GH_LOG" || fail "a label was read or written: $(cat "$GH_LOG")"
 
 # Approval dry run
 newrepo "Approval dry run"
 mkprop add-x 'Issue: none' '- Add x'
 cp openspec/changes/add-x/proposal.md "$tmp/before"
-STUB_LABELS=type:feat fails 0 "$S/create-issue.sh" add-x --dry-run
-rg -q 'gh issue create .*--label type:feat --assignee @me' "$tmp/out" || fail "stdout: $(cat "$tmp/out")"
+fails 0 "$S/create-issue.sh" add-x --dry-run
+rg -q 'gh issue create .*--type Feature --assignee @me' "$tmp/out" || fail "stdout: $(cat "$tmp/out")"
 rg -q 'set-status\.sh add-x approved' "$tmp/out" || fail "stdout lacks set-status: $(cat "$tmp/out")"
 ! rg -q 'create' "$GH_LOG" || fail "write made: $(cat "$GH_LOG")"
 cmp -s "$tmp/before" openspec/changes/add-x/proposal.md || fail "proposal changed"

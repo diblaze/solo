@@ -34,7 +34,7 @@
 
 ## Decisions
 - One `issue.sh <op>` with subcommands, one `issue.test.sh` — shared parsing, validation and `common.sh` source once; seven scripts would repeat all three (E2, E4).
-- Type = the forge's issue type, exactly one, required on create: `feat`, `bug`, `chore` map to `Feature`, `Bug`, `Task` (E20). No label is read or written, so `ensure_label` is not used. The tracking issue (`create-issue.sh`) and PRs keep `type:*` labels; moving the tracking issue to issue types is a later change.
+- Type = the forge's issue type, exactly one, required on create: `feat`, `bug`, `chore` map to `Feature`, `Bug`, `Task` (E20). No label is read or written, so `ensure_label` is not used. The tracking issue (`create-issue.sh`) sets the issue type the same way, from the slug prefix. PRs keep `type:*` labels (`open-pr.sh`, `ensure_label`): a PR has no issue type.
 - `gh` flags for blocked-by, milestone assignment, close reason; `gh api` only for milestone create/list/close, which `gh` lacks (E7–E10). Close by title matches the exact title in bash, never inside a jq expression.
 - Output: `create` prints `owner/repo#n` (parsed like E3); other writes print nothing on success; `list` lines come from gh's `--jq`. The harness runs that jq through real `jq` on canned JSON so the format is tested, not stubbed; CI installs `jq` next to `rg` (E6).
 - `close --reason not-planned` maps to gh's `not planned`; `--duplicate-of <m>` sets duplicate (E9).
