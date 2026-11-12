@@ -2,6 +2,9 @@
 name: plan
 description: Gate 1 of plan → execute → review. Dispatches the `solo:planner` agent (Opus, or Fable when the user approves) to write an OpenSpec change (openspec/changes/<slug>/ — proposal, delta specs, design, tasks) grounded in codebase evidence, then stops for approval. Use for any change touching more than one file or any behavior change. Does not edit code — use solo:execute after approval. Does not diagnose a bug — use solo:investigate first, it feeds a plan.
 argument-hint: <what to build or change> | #<issue> | <issue url>
+allowed-tools:
+  - Bash(${CLAUDE_SKILL_DIR}/scripts/read-issue.sh *)
+  - Bash(${CLAUDE_SKILL_DIR}/scripts/validate-change.sh *)
 ---
 
 # Plan
