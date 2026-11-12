@@ -235,4 +235,14 @@ case="Model-calling eval in hooks or CI refused"
 hits="$(rg -l --hidden -e 'plugin eval' -e 'run\.sh' -g '!.git/' -g '!evals/' -g '!openspec/' -g '!tests/' -g '!README.md' -g '!AGENTS.md' -g '!skills/**/*.md' -g '!skills/**/*.test.sh' "$P" || true)"
 [ -z "$hits" ] || fail "may run the eval suite: $hits"
 
+case="Commit guard wired on execute"
+ef="$(fm "$P/skills/execute/SKILL.md")"
+for l in 'hooks:' '  PreToolUse:' '    - matcher: "Bash"' '      hooks:' '        - type: command' "          command: 'bash \"\${CLAUDE_PLUGIN_ROOT}/skills/execute/scripts/commit-guard.sh\"'"; do
+  rg -qxF -- "$l" <<<"$ef" || fail "execute frontmatter lacks: $l"
+done
+# once: would drop the guard after its first allowed run, possibly in another repository;
+# an if: prefix rule would skip `git -C <dir> commit` and `env X=1 git commit`.
+! rg -q 'once:|if:' <<<"$ef" || fail "commit guard is one-shot or filtered"
+[ -f "$P/skills/execute/scripts/commit-guard.sh" ] || fail "commit-guard.sh missing"
+
 echo "guards.test.sh: ok"
