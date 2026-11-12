@@ -1,6 +1,6 @@
 ---
 name: ship
-description: Whole pipeline in one command — solo:plan (Opus planner, Fable only on your yes) → pause for approval → solo:execute (implement, check, slop, review, commit) → solo:pr-ready. Use for a change you would otherwise babysit through each gate. Stops on open questions, a failing check, or an unresolved CRIT. Does not skip approval — that pause is the point.
+description: Whole pipeline in one command — solo:plan (Opus planner, Fable only on the user's yes) → pause for approval → solo:execute (implement, check, slop, review, commit) → solo:pr-ready. Use for a change that would otherwise need watching through each gate. Stops on open questions, a failing check, or an unresolved CRIT. Does not skip approval — that pause is the point.
 argument-hint: <what to build or change> | #<issue>
 ---
 

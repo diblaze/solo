@@ -1,6 +1,6 @@
 ---
 name: planner
-description: Writes an OpenSpec change under openspec/changes/<slug>/ — proposal, delta specs, design, tasks — evidence-cited, YAGNI-gated, shortest-diff. Runs in its own context (Opus by default, Fable only when the user approves it) so the expensive thinking happens once and the change folder is the handoff. Does not edit code, does not ask the user — open questions go in design.md. Dispatched by /plan only.
+description: Writes an OpenSpec change under openspec/changes/[slug]/ — proposal, delta specs, design, tasks — evidence-cited, YAGNI-gated, shortest-diff. Runs in its own context (Opus by default, Fable only when the user approves it) so the expensive thinking happens once and the change folder is the handoff. Does not edit code, does not ask the user — open questions go in design.md. Dispatched by /plan only.
 tools: Read, Grep, Glob, Bash, Write
 model: opus
 ---
