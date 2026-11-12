@@ -224,4 +224,15 @@ for g in "$ev"/*/graders/not-*.md; do
   rg -qxF -- "$(fires "$s")" "$g" || fail "$g: does not match skill $s"
 done
 
+case="Runner keeps write tools off"
+# The one exec line, matched whole: a comment or a second command cannot stand in for it.
+want='exec claude plugin eval "$root" --ablation none --no-publish --max-cost-usd "${SOLO_EVAL_MAX_USD:-5}" "$@" --disallow-tools Bash Write Edit NotebookEdit WebFetch WebSearch Agent'
+[ "$(rg -c '^\s*exec ' "$ev/run.sh" || echo 0)" = 1 ] && rg -qxF -- "$want" "$ev/run.sh" || fail "evals/run.sh is not the one locked exec line"
+! rg -n '^\s*[^#[:space:]]' "$ev/run.sh" | rg -v ':(set -euo pipefail|root=|exec claude plugin eval )' || fail "evals/run.sh runs more than the locked command"
+
+case="Model-calling eval in hooks or CI refused"
+# Everywhere a hook, workflow or plugin hook could live; docs and the suite itself may name the runner.
+hits="$(rg -l --hidden -e 'plugin eval' -e 'run\.sh' -g '!.git/' -g '!evals/' -g '!openspec/' -g '!tests/' -g '!README.md' -g '!AGENTS.md' -g '!skills/**/*.md' -g '!skills/**/*.test.sh' "$P" || true)"
+[ -z "$hits" ] || fail "may run the eval suite: $hits"
+
 echo "guards.test.sh: ok"

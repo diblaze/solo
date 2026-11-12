@@ -13,4 +13,4 @@
 - [x] 2.4 Docs (E16, E17): `README.md` Scripts table row for `evals/run.sh` (one arm, local report, `SOLO_EVAL_MAX_USD` ceiling default 5, spends model usage, iterate with `--case <skill> --runs 1`), a line under Tests and Contributing that the suite is never run by hooks or CI; `AGENTS.md:6` Tests line names `bash evals/run.sh` as manual and paid; `.claude-plugin/plugin.json` version `2.4.0`. Verify: `bash skills/map/scripts/check-map.sh`.
 
 ## 3. Check
-- [ ] 3.1 `lefthook run pre-push --all-files && bash skills/map/scripts/check-map.sh && claude plugin validate --strict .`
+- [x] 3.1 `lefthook run pre-push --all-files && bash skills/map/scripts/check-map.sh && claude plugin validate --strict .`
