@@ -1,6 +1,6 @@
 ---
 name: review
-description: Gate 3 of plan → execute → review. Dispatches the read-only reviewer subagent on the current branch diff, then fixes what it finds. Use after execute, or on any diff before it merges. Does not open the PR — use solo:pr-ready (which calls this).
+description: Dispatches the read-only reviewer subagent on the current branch diff, then fixes what it finds. Gate 3 of plan → execute → review. Use after execute, or on any diff before it merges. Does not open the PR — use solo:pr-ready (which calls this).
 argument-hint: [base branch, default main]
 ---
 

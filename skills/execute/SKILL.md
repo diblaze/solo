@@ -1,6 +1,6 @@
 ---
 name: execute
-description: Gate 2 of plan → execute → review. Implements an approved OpenSpec change (openspec/changes/<slug>/) on a branch task by task, runs the check, then chains slop pass → solo:review → atomic conventional commits (one per task group), and marks the change done. Refuses a change whose Status is not approved. Does not open the PR — use solo:pr-ready.
+description: Implements an approved OpenSpec change (openspec/changes/[slug]/) on a branch task by task, runs the check, then chains slop pass → solo:review → atomic conventional commits (one per task group), and marks the change done. Gate 2 of plan → execute → review. Refuses a change whose Status is not approved. Does not open the PR — use solo:pr-ready.
 argument-hint: <change slug or path>
 allowed-tools:
   - Bash(${CLAUDE_SKILL_DIR}/../plan/scripts/validate-change.sh *)

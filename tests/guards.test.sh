@@ -170,4 +170,15 @@ for f in "${skills[@]}"; do
 done
 rm -rf "$out"
 
+descs="$(rg -N '^description:' "${skills[@]}" "$P"/agents/*.md)"
+
+case="Placeholder shown as written"
+! rg '[<>]' <<<"$descs" || fail "a description holds < or >"
+
+case="Description in third person"
+! rg -i '\byour?\b' <<<"$descs" || fail "a description speaks to the reader"
+
+case="Use case leads the description"
+! rg ":description: [\"']?Gate " <<<"$descs" || fail "a description opens with its gate number"
+
 echo "guards.test.sh: ok"
