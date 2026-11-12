@@ -29,8 +29,8 @@ jobs:
       - name: shellcheck
         run: git ls-files -z '*.sh' | xargs -0 shellcheck -S warning
 
-      - name: install ripgrep
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq ripgrep
+      - name: install ripgrep and jq
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ripgrep jq
 
       - name: tests
         run: |
@@ -38,6 +38,7 @@ jobs:
           bash skills/pr-ready/scripts/open-pr.test.sh
           bash tests/guards.test.sh
           bash skills/map/scripts/check-map.test.sh
+          bash skills/issues/scripts/issue.test.sh
 
       - name: gitleaks
         run: docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f git /repo --redact --no-banner # v8.30.1
