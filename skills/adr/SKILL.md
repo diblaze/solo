@@ -39,3 +39,4 @@ The signal that would make us revisit, and roughly what undoing costs.
 - No decision without a rejected alternative. If nothing was rejected, there was no decision.
 - Evidence over assertion: benchmark, cost figure, `path:line`, or a dated link. Unmeasured claim → prefix `Unverified:`.
 - Keep it under a page. The ADR that nobody reads records nothing.
+- Run the prose through `/solo:writer` in embedded mode before writing the file.

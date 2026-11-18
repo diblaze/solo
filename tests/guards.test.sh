@@ -25,6 +25,9 @@ has "$s5" 'open-pr\.sh.*--dry-run'
 has "$s5" 'AskUserQuestion'
 has "$s5" 'only on yes'
 
+case="PR body passes the writer"
+has "$s5" '/solo:writer.*embedded mode'
+
 case="Merge asks first"
 s6="$(section "$pr" 6)"
 has "$s6" 'merge-pr\.sh.*--dry-run'
@@ -138,6 +141,29 @@ has "$b" 'No files'
 has "$b" '/solo:plan'
 [ -z "$(allowed "$bs")" ] || fail "brainstorm pre-approves a call"
 
+w="$(cat "$P/skills/writer/SKILL.md" 2>/dev/null || true)"
+
+case="Rewrite keeps every fact"
+has "$w" 'Keep every supported claim'
+has "$w" 'Do not add a fact'
+
+case="Dashes removed"
+has "$w" 'never contains an em dash'
+
+case="Agent-facing text left alone"
+for t in 'What stays unchanged' 'AGENTS\.md' 'code comments' 'commit messages'; do has "$w" "$t"; done
+
+case="Review lists tells without editing"
+has "$w" 'Review mode.*change nothing'
+has "$w" 'never writes to it'
+
+case="Caller format kept"
+has "$w" 'Embedded mode.*return only the final text'
+has "$w" "calling skill's format wins"
+
+case="Docs and ADR prose pass the writer"
+for s in docs adr; do has "$(cat "$P/skills/$s/SKILL.md")" '/solo:writer.*embedded mode'; done
+
 skills=("$P"/skills/*/SKILL.md)
 
 case="Script path is exact"
@@ -239,7 +265,8 @@ done
 
 case="Chaining skill without a guard refused"
 # A skill that chains into the expected one would fire it too, so its case must refuse the chaining skill.
-for pair in "slop pr-ready" "slop execute" "review pr-ready" "review execute" "execute ship" "pr-ready ship"; do
+for pair in "slop pr-ready" "slop execute" "review pr-ready" "review execute" "execute ship" "pr-ready ship" \
+  "writer docs" "writer adr" "writer pr-ready"; do
   read -r a b <<<"$pair"
   [ -f "$ev/$a/graders/not-$b.md" ] || fail "$a case does not refuse $b, which chains into $a"
 done
