@@ -164,6 +164,32 @@ has "$w" "calling skill's format wins"
 case="Docs and ADR prose pass the writer"
 for s in docs adr; do has "$(cat "$P/skills/$s/SKILL.md")" '/solo:writer.*embedded mode'; done
 
+cm="$(cat "$P/skills/comments/SKILL.md" 2>/dev/null || true)"
+# step <file text> <n>: the text of numbered step n, up to the next numbered step.
+step() { awk -v n="$2" '$0 ~ "^"n"\\. " {f = 1; print; next} f && /^[0-9]+\. / {exit} f' <<<"$1"; }
+
+case="Verdicts shown before any fix"
+for t in 'true bug' 'valid improvement' 'false positive' 'judgment call'; do has "$(step "$cm" 2)" "$t"; done
+has "$(step "$cm" 3)" 'AskUserQuestion'
+has "$(step "$cm" 3)" 'no file is edited before'
+
+case="Fix folded into its commit"
+s4="$(step "$cm" 4)"
+has "$s4" 'git commit --fixup'
+has "$s4" 'folds the fixups'
+! rg -q 'rebase' <<<"$s4" || fail "comments rebases instead of letting pr-ready fold"
+has "$s4" '/solo:pr-ready'
+! rg -qF 'git push' <<<"$cm" || fail "comments pushes by itself"
+
+case="Replies and resolves shown first"
+s5="$(step "$cm" 5)"
+has "$s5" 'reply .*--dry-run'
+has "$s5" 'resolve .*--dry-run'
+has "$s5" 'AskUserQuestion'
+has "$s5" 'only on yes'
+has "$s5" 'declined'
+has "$cm" 'Never resolve a thread'
+
 skills=("$P"/skills/*/SKILL.md)
 
 case="Script path is exact"
@@ -184,6 +210,7 @@ declare -A READONLY=(
   [issues]=$'Bash(${CLAUDE_SKILL_DIR}/scripts/issue.sh list)\nBash(${CLAUDE_SKILL_DIR}/scripts/issue.sh list *)\nBash(${CLAUDE_SKILL_DIR}/scripts/issue.sh milestone list)'
   [map]='Bash(${CLAUDE_SKILL_DIR}/scripts/check-map.sh)'
   [review]='Bash(${CLAUDE_SKILL_DIR}/scripts/review-md.sh *)'
+  [comments]=$'Bash(${CLAUDE_SKILL_DIR}/scripts/threads.sh list)\nBash(${CLAUDE_SKILL_DIR}/scripts/threads.sh list *)'
 )
 
 case="Read-only script runs without a prompt"
@@ -258,7 +285,7 @@ done
 case="Boundary pair without a guard refused"
 for pair in "slop refactor" "slop review" "refactor review" "investigate research" "investigate gap-analysis" \
   "research gap-analysis" "plan ship" "docs adr" "docs map" "adr map" "issues plan" \
-  "brainstorm plan" "brainstorm research"; do
+  "brainstorm plan" "brainstorm research" "comments review"; do
   read -r a b <<<"$pair"
   [ -f "$ev/$a/graders/not-$b.md" ] || [ -f "$ev/$b/graders/not-$a.md" ] || fail "no guard between $a and $b"
 done
@@ -266,7 +293,7 @@ done
 case="Chaining skill without a guard refused"
 # A skill that chains into the expected one would fire it too, so its case must refuse the chaining skill.
 for pair in "slop pr-ready" "slop execute" "review pr-ready" "review execute" "execute ship" "pr-ready ship" \
-  "writer docs" "writer adr" "writer pr-ready"; do
+  "writer docs" "writer adr" "writer pr-ready" "pr-ready comments"; do
   read -r a b <<<"$pair"
   [ -f "$ev/$a/graders/not-$b.md" ] || fail "$a case does not refuse $b, which chains into $a"
 done

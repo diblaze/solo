@@ -9,6 +9,7 @@ One folder per `/solo:*` skill. Each holds a `SKILL.md` (frontmatter `name` and 
 | --- | --- |
 | adr/ | Architecture decision record into `docs/adr/` |
 | brainstorm/ | Options landscape before a plan: three to five approaches and a pick |
+| comments/ | Triage, fix, reply to and resolve PR review threads through `scripts/threads.sh` |
 | docs/ | README, feature or API docs from codebase evidence |
 | execute/ | Gate 2: implement an approved OpenSpec change, review, commit |
 | gap-analysis/ | Compare what exists against what was specified |
