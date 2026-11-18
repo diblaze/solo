@@ -4,7 +4,7 @@ solo is a Claude Code plugin that runs every non-trivial change through three ga
 
 It is built for one developer working with an AI pair: you make the decisions (approve the plan, answer open questions, say yes to push and merge), and the agents do the legwork in between. Every step leaves evidence behind: an OpenSpec change folder, a GitHub issue, atomic commits, a review.
 
-- **17 skills**: 4 gates (plan, execute, review, pr-ready), the `ship` shortcut that chains them, and 12 helpers (brainstorm, investigate, tdd, refactor, slop, research, gap-analysis, adr, docs, standard, map, issues).
+- **18 skills**: 4 gates (plan, execute, review, pr-ready), the `ship` shortcut that chains them, and 13 helpers (brainstorm, investigate, tdd, refactor, slop, research, gap-analysis, adr, docs, writer, standard, map, issues).
 - **4 subagents**: planner, explorer, reviewer, implementer. Each one has a narrow job and a fixed model.
 - **Principles**: cite evidence (`path:line`), shortest correct diff, one logical change per commit, and a runnable check for every change.
 
@@ -45,6 +45,7 @@ Each skill says what it does not do and which skill does that instead, so the mo
 | `/solo:gap-analysis` | Before calling work done, or when inheriting a half-built feature. Lists what is missing, partial or extra against the spec | Finding bugs in code that matches the spec (`review`) |
 | `/solo:adr` | A choice is hard to undo (dependency, schema, protocol, hosting, auth) or was argued about. Writes `docs/adr/` | How the system works (`docs`) |
 | `/solo:docs` | Someone needs to use or change the thing: README, feature doc, API surface, from code evidence | Why a decision was made (`adr`) |
+| `/solo:writer` | Prose people read sounds like a model wrote it: a README, ADR, PR body, issue or reply. Rewrites or reviews it, keeps every fact, no dashes. docs, adr and pr-ready run their prose through it | Code and code comments (`slop`), writing docs from code (`docs`) |
 | `/solo:standard` | New repo, changed tooling, or a skill reports "no coding standard". Writes `## Coding standard` in `AGENTS.md` | Enforcing it on a diff (`review`) |
 | `/solo:map` | New or inherited repo, or the layout moved. Writes a root `## Map` and one `AGENTS.md` per directory that carries weight, keeps hand-written lines, then `/solo:pr-ready` | The coding standard (`standard`), README or feature docs (`docs`) |
 | `/solo:issues` | Issue upkeep outside a change: a new work item, a retype, a milestone, a dependency, the ready queue. One script call per operation, `--dry-run` on every write | A change's tracking issue (`plan` creates it on approval) |
@@ -104,7 +105,7 @@ Skills run these instead of retyping CLI commands, so every run does the same th
 | `skills/pr-ready/scripts/merge-pr.sh <n> [--dry-run]` | Switches squash merging off, rebase-merges, retargets open PRs stacked on the branch, prints each child's rebase, deletes the branch, fast-forwards the local base |
 | `skills/map/scripts/check-map.sh [base-ref]` | Refuses an `AGENTS.md` anywhere below a plugin's or `.claude/`'s `agents/`, `commands/` or `output-styles/` folder, a link or `Parent` comment that does not resolve (code spans and fences are skipped), a nested `AGENTS.md` that no root `## Map` row links, and a root `## Coding standard` changed since `base-ref` |
 | `skills/issues/scripts/issue.sh <create\|edit\|comment\|close\|reopen\|list\|milestone> … [--dry-run]` | One GitHub issue operation per call: exactly one type, set as GitHub's issue type (`feat`, `bug`, `chore` are `Feature`, `Bug`, `Task`), milestone, assignees, blocked-by, close reason; `list --ready` prints open unblocked issues one line each; `milestone list\|create\|close`. Bad input exits 2 before `gh` runs. Needs gh 2.100 or newer |
-| `evals/run.sh [--case <glob>] [--runs <n>] [--model <m>]` | Runs the skill trigger suite in `evals/` (one case per skill, zero-call guards on overlapping neighbours): one arm, report kept local, list-price ceiling `SOLO_EVAL_MAX_USD` (default 5), shell, write, web and subagent tools withheld. Spends model usage (17 cases × 3 runs by default); iterate with `--case <skill> --runs 1`. Pin `--model` when comparing two runs |
+| `evals/run.sh [--case <glob>] [--runs <n>] [--model <m>]` | Runs the skill trigger suite in `evals/` (one case per skill, zero-call guards on overlapping neighbours): one arm, report kept local, list-price ceiling `SOLO_EVAL_MAX_USD` (default 5), shell, write, web and subagent tools withheld. Spends model usage (18 cases × 3 runs by default); iterate with `--case <skill> --runs 1`. Pin `--model` when comparing two runs |
 | `skills/execute/scripts/commit-guard.sh` | PreToolUse hook `/solo:execute` registers for the rest of the session: refuses a `git commit` on main or master that carries an approved OpenSpec change folder together with code (staged, added in the same command, or taken in by `git add -A` / `commit -a`; follows `cd` and `git -C`); a commit of only `openspec/` files passes; a repo that commits approved changes to main opts out with `git config solo.allowMainCommits true`, and tells Claude to branch first. Every other command and repository passes; any fault lets the command run. Needs `jq`, `rg`, `git` |
 | `skills/review/scripts/review-md.sh [--base <ref>]` | Prints the root `REVIEW.md` and the nearest one above each changed and untracked file, read from the base ref (default `origin/main`) with `git show`, so a branch cannot loosen the rules it is reviewed by; nothing when there are none; exit 1 on an unknown ref or unrelated history |
 
@@ -168,4 +169,4 @@ Install the tools once: `go install github.com/evilmartians/lefthook/v2@v2.2.2`,
 
 ## License
 
-MIT, see [LICENSE](LICENSE). Security reports: see [SECURITY.md](SECURITY.md).
+MIT, see [LICENSE](LICENSE); third-party notices in [NOTICE](NOTICE). Security reports: see [SECURITY.md](SECURITY.md).

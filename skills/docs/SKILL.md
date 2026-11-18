@@ -23,7 +23,7 @@ Answer first, detail after. Per section:
 - **Limits** — what it does not do, known ceilings, anything marked `ponytail:` in the code.
 
 ## 4. Voice
-Short sentences, active, present tense. No "simply", "just", "robust", "seamless". No feature tour, no marketing. A code block beats a paragraph describing the code block. If the explanation is longer than the thing it explains, cut the explanation.
+Short sentences, active, present tense. No "simply", "just", "robust", "seamless". No feature tour, no marketing. A code block beats a paragraph describing the code block. If the explanation is longer than the thing it explains, cut the explanation. Then run the prose through `/solo:writer` in embedded mode before writing the file.
 
 ## 5. Verify
 Run every command you wrote down. Broken command in a doc is a bug. Could not run it → `Unverified: <command>, because <why>`.

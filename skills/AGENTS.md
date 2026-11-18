@@ -24,6 +24,7 @@ One folder per `/solo:*` skill. Each holds a `SKILL.md` (frontmatter `name` and 
 | slop/ | Deletion-first cleanup of AI slop |
 | standard/ | Root AGENTS.md `## Coding standard` |
 | tdd/ | Red-green-refactor with an observed-failure gate |
+| writer/ | Rewrite or review prose for people; docs, adr and pr-ready call it |
 
 ## For AI agents
 - Test: `lefthook run pre-push --all-files`.
