@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Usage: bash evals/run.sh [--case <glob>] [--runs <n>] [--model <m>] [other `claude plugin eval` flags]
-# Runs the skill trigger suite. It spends model usage: about cases x runs agent runs (18 x 3 = 54 by default).
+# Runs the skill trigger suite. It spends model usage: about cases x runs agent runs (19 x 3 = 57 by default).
 # One arm, because a "skill fired" grader can never pass without the plugin. The report stays local, and
 # SOLO_EVAL_MAX_USD (default 5) caps the list-price estimate. Shell, file-write, web and subagent tools
 # are withheld after any flag passed here, so no case can push, open a PR or touch an issue.
