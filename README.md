@@ -4,7 +4,7 @@ solo is a Claude Code plugin that runs every non-trivial change through three ga
 
 It is built for one developer working with an AI pair: you make the decisions (approve the plan, answer open questions, say yes to push and merge), and the agents do the legwork in between. Every step leaves evidence behind: an OpenSpec change folder, a GitHub issue, atomic commits, a review.
 
-- **16 skills**: 4 gates (plan, execute, review, pr-ready), the `ship` shortcut that chains them, and 11 helpers (investigate, tdd, refactor, slop, research, gap-analysis, adr, docs, standard, map, issues).
+- **17 skills**: 4 gates (plan, execute, review, pr-ready), the `ship` shortcut that chains them, and 12 helpers (brainstorm, investigate, tdd, refactor, slop, research, gap-analysis, adr, docs, standard, map, issues).
 - **4 subagents**: planner, explorer, reviewer, implementer. Each one has a narrow job and a fixed model.
 - **Principles**: cite evidence (`path:line`), shortest correct diff, one logical change per commit, and a runnable check for every change.
 
@@ -31,16 +31,17 @@ Each skill says what it does not do and which skill does that instead, so the mo
 
 | Skill | Use it when | Not for (use instead) |
 | --- | --- | --- |
-| `/solo:plan` | Any change touching more than one file, or any behavior change. Writes an OpenSpec change and stops for approval | Editing code (`execute`), diagnosing a bug (`investigate`) |
+| `/solo:plan` | Any change touching more than one file, or any behavior change. Writes an OpenSpec change and stops for approval | Editing code (`execute`), diagnosing a bug (`investigate`), weighing approaches still open (`brainstorm`) |
 | `/solo:execute` | A change is approved. Branches, implements task by task, runs the check, slop pass, review, atomic commits | Opening the PR (`pr-ready`) |
 | `/solo:review` | After execute, or on any diff before merge. Dispatches the reviewer with the base branch's `REVIEW.md` rules, then fixes every finding | Opening the PR (`pr-ready` calls it) |
 | `/solo:pr-ready` | A branch is about to become a PR. Slop + review, folds fixes and specs, shows a dry run and opens the PR on your yes | Planning or implementing |
 | `/solo:ship` | A change you would otherwise babysit through each gate. Runs plan → pause → execute → pr-ready | Skipping approval: the pause stays |
+| `/solo:brainstorm` | The approach is still open: "what are our options", "should we X or Y". Three to five grounded options with cost and first failure, a recommendation and the open questions. Writes nothing | Planning the chosen option (`plan`), external sources (`research`) |
 | `/solo:investigate` | A bug or failing behavior. Evidence (E#), root cause, a counter-check, a fix plan | Applying the fix (`plan`, `execute`) |
 | `/solo:tdd` | Behavior worth driving from tests: parsers, money and auth paths, state machines. Red must be observed before green | Restructuring without new behavior (`refactor`) |
 | `/solo:refactor` | The code's shape blocks a change, or seams show after a feature. Characterization test first, one move per green bar | Adding behavior (`plan`), fixing bugs (`investigate`) |
 | `/solo:slop` | Code works but is bloated: dead code, duplicates, pass-through wrappers, weak tests. One smell class per pass | Restructuring for a coming change (`refactor`) |
-| `/solo:research` | An open question before choosing a library, protocol or approach. Sourced evidence, ends on a recommendation | Searching this codebase (`investigate`) |
+| `/solo:research` | An open question before choosing a library, protocol or approach. Sourced evidence, ends on a recommendation | Searching this codebase (`investigate`), approaches to a change in this codebase (`brainstorm`) |
 | `/solo:gap-analysis` | Before calling work done, or when inheriting a half-built feature. Lists what is missing, partial or extra against the spec | Finding bugs in code that matches the spec (`review`) |
 | `/solo:adr` | A choice is hard to undo (dependency, schema, protocol, hosting, auth) or was argued about. Writes `docs/adr/` | How the system works (`docs`) |
 | `/solo:docs` | Someone needs to use or change the thing: README, feature doc, API surface, from code evidence | Why a decision was made (`adr`) |
@@ -103,7 +104,7 @@ Skills run these instead of retyping CLI commands, so every run does the same th
 | `skills/pr-ready/scripts/merge-pr.sh <n> [--dry-run]` | Switches squash merging off, rebase-merges, retargets open PRs stacked on the branch, prints each child's rebase, deletes the branch, fast-forwards the local base |
 | `skills/map/scripts/check-map.sh [base-ref]` | Refuses an `AGENTS.md` anywhere below a plugin's or `.claude/`'s `agents/`, `commands/` or `output-styles/` folder, a link or `Parent` comment that does not resolve (code spans and fences are skipped), a nested `AGENTS.md` that no root `## Map` row links, and a root `## Coding standard` changed since `base-ref` |
 | `skills/issues/scripts/issue.sh <create\|edit\|comment\|close\|reopen\|list\|milestone> … [--dry-run]` | One GitHub issue operation per call: exactly one type, set as GitHub's issue type (`feat`, `bug`, `chore` are `Feature`, `Bug`, `Task`), milestone, assignees, blocked-by, close reason; `list --ready` prints open unblocked issues one line each; `milestone list\|create\|close`. Bad input exits 2 before `gh` runs. Needs gh 2.100 or newer |
-| `evals/run.sh [--case <glob>] [--runs <n>] [--model <m>]` | Runs the skill trigger suite in `evals/` (one case per skill, zero-call guards on overlapping neighbours): one arm, report kept local, list-price ceiling `SOLO_EVAL_MAX_USD` (default 5), shell, write, web and subagent tools withheld. Spends model usage (16 cases × 3 runs by default); iterate with `--case <skill> --runs 1`. Pin `--model` when comparing two runs |
+| `evals/run.sh [--case <glob>] [--runs <n>] [--model <m>]` | Runs the skill trigger suite in `evals/` (one case per skill, zero-call guards on overlapping neighbours): one arm, report kept local, list-price ceiling `SOLO_EVAL_MAX_USD` (default 5), shell, write, web and subagent tools withheld. Spends model usage (17 cases × 3 runs by default); iterate with `--case <skill> --runs 1`. Pin `--model` when comparing two runs |
 | `skills/execute/scripts/commit-guard.sh` | PreToolUse hook `/solo:execute` registers for the rest of the session: refuses a `git commit` on main or master that carries an approved OpenSpec change folder together with code (staged, added in the same command, or taken in by `git add -A` / `commit -a`; follows `cd` and `git -C`); a commit of only `openspec/` files passes; a repo that commits approved changes to main opts out with `git config solo.allowMainCommits true`, and tells Claude to branch first. Every other command and repository passes; any fault lets the command run. Needs `jq`, `rg`, `git` |
 | `skills/review/scripts/review-md.sh [--base <ref>]` | Prints the root `REVIEW.md` and the nearest one above each changed and untracked file, read from the base ref (default `origin/main`) with `git show`, so a branch cannot loosen the rules it is reviewed by; nothing when there are none; exit 1 on an unknown ref or unrelated history |
 

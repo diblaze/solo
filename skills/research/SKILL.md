@@ -1,6 +1,6 @@
 ---
 name: research
-description: Answer an open question with sourced evidence — options, trade-offs, prior art, how something actually works — and end on a recommendation. Use before picking a library, protocol, or approach. Does not search this codebase for a bug — use solo:investigate. Does not compare code against a spec — use solo:gap-analysis. Does not write the plan — use solo:plan.
+description: Answer an open question with sourced evidence — options, trade-offs, prior art, how something actually works — and end on a recommendation. Use before picking a library, protocol, or approach. Does not search this codebase for a bug — use solo:investigate. Does not compare code against a spec — use solo:gap-analysis. Does not lay out approaches to a change in this codebase — use solo:brainstorm. Does not write the plan — use solo:plan.
 argument-hint: <question>
 ---
 
