@@ -119,6 +119,25 @@ has "$m" 'claude-md-and-agents-md'
 has "$m" 'delete .*CLAUDE\.md'
 has "$m" 'only on a yes'
 
+bs="$P/skills/brainstorm/SKILL.md"
+b="$(cat "$bs" 2>/dev/null || true)"
+
+case="Landscape of distinct options"
+for t in 'three to five' 'Cost:' 'Breaks first:' 'Right when:' 'do nothing'; do has "$b" "$t"; done
+
+case="Existing helper cited"
+for t in 'path:line' 'Unverified:' 'solo:explorer'; do has "$b" "$t"; done
+
+case="Landscape ends on a pick"
+has "$b" '^## Recommendation'
+has "$b" '^## Open questions'
+
+case="No file written"
+has "$b" 'No code'
+has "$b" 'No files'
+has "$b" '/solo:plan'
+[ -z "$(allowed "$bs")" ] || fail "brainstorm pre-approves a call"
+
 skills=("$P"/skills/*/SKILL.md)
 
 case="Script path is exact"
@@ -212,7 +231,8 @@ done
 
 case="Boundary pair without a guard refused"
 for pair in "slop refactor" "slop review" "refactor review" "investigate research" "investigate gap-analysis" \
-  "research gap-analysis" "plan ship" "docs adr" "docs map" "adr map" "issues plan"; do
+  "research gap-analysis" "plan ship" "docs adr" "docs map" "adr map" "issues plan" \
+  "brainstorm plan" "brainstorm research"; do
   read -r a b <<<"$pair"
   [ -f "$ev/$a/graders/not-$b.md" ] || [ -f "$ev/$b/graders/not-$a.md" ] || fail "no guard between $a and $b"
 done
