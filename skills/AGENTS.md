@@ -18,7 +18,7 @@ One folder per `/solo:*` skill. Each holds a `SKILL.md` (frontmatter `name` and 
 | pr-ready/ | Pre-PR gate: slop, review, fold specs, open the PR |
 | refactor/ | Behavior-preserving restructuring |
 | research/ | Sourced answer to an open question, ending on a recommendation |
-| review/ | Gate 3: dispatch the reviewer on the branch diff |
+| review/ | Gate 3: dispatch the reviewer on the branch diff, with `REVIEW.md` rules from the base ref (`scripts/review-md.sh`) |
 | ship/ | Whole pipeline in one command |
 | slop/ | Deletion-first cleanup of AI slop |
 | standard/ | Root AGENTS.md `## Coding standard` |
