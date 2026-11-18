@@ -56,6 +56,13 @@ has "$rev" 'CLAUDE\.md'
 case="No reviewer named"
 has "$rev" 'else `solo:reviewer`'
 
+case="Rules passed to the reviewer"
+rules="$(awk '/review-md\.sh --base/ {print NR; exit}' <<<"$rev")"
+dispatch="$(awk '/^[0-9]+\. Dispatch/ {print NR; exit}' <<<"$rev")"
+[ -n "$rules" ] && [ -n "$dispatch" ] && [ "$rules" -lt "$dispatch" ] || fail "review does not fetch REVIEW.md rules before the dispatch"
+has "$(rg '^[0-9]+\. Dispatch' <<<"$rev")" 'REVIEW\.md'
+has "$(cat "$P/agents/reviewer.md")" 'REVIEW\.md'
+
 case="Untracked secret not staged"
 ex="$(cat "$P/skills/execute/SKILL.md")"
 ! rg -qF 'git add -A' <<<"$ex" || fail "execute stages everything"
@@ -131,6 +138,7 @@ declare -A READONLY=(
   [execute]='Bash(${CLAUDE_SKILL_DIR}/../plan/scripts/validate-change.sh *)'
   [issues]=$'Bash(${CLAUDE_SKILL_DIR}/scripts/issue.sh list)\nBash(${CLAUDE_SKILL_DIR}/scripts/issue.sh list *)\nBash(${CLAUDE_SKILL_DIR}/scripts/issue.sh milestone list)'
   [map]='Bash(${CLAUDE_SKILL_DIR}/scripts/check-map.sh)'
+  [review]='Bash(${CLAUDE_SKILL_DIR}/scripts/review-md.sh *)'
 )
 
 case="Read-only script runs without a prompt"
