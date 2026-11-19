@@ -360,4 +360,20 @@ case="Release tag format"
 has "$rcs" '"include-component-in-tag":\s*true'
 has "$rcs" '"tag-separator":\s*"--"'
 
+case="Release PR gets the required check"
+rw="$P/.github/workflows/release.yml"
+[ -f "$rw" ] || fail "release.yml missing"
+rws="$(cat "$rw")"
+rg -qx 'permissions: \{\}' <<<"$rws" || fail "release.yml top-level permissions not empty"
+has "$rws" 'uses: googleapis/release-please-action@[0-9a-f]{40}'
+# Job permissions: exactly these four, all write.
+jp="$(awk '/^    permissions:/ {f = 1; next} f && !/^      / {exit} f' "$rw" | sed 's/^ *//' | sort | tr '\n' ' ')"
+[ "$jp" = "actions: write contents: write issues: write pull-requests: write " ] || fail "job permissions: $jp"
+has "$rws" 'gh workflow run ci\.yml .*--ref "\$BRANCH"'
+has "$rws" 'BRANCH: \$\{\{ fromJSON\(steps\.rp\.outputs\.pr\)\.headBranchName \}\}'
+# Expressions only inside an env: map: one in run: is a script injection.
+bad="$(awk '/^ *env: *$/ {e = match($0, /[^ ]/); next} e && match($0, /[^ ]/) <= e {e = 0} /\$\{\{/ && !e {print NR ": " $0}' "$rw")"
+[ -z "$bad" ] || fail "expression outside env: $bad"
+rg -q '^  workflow_dispatch:' "$P/.github/workflows/ci.yml" || fail "ci.yml lacks workflow_dispatch"
+
 echo "guards.test.sh: ok"
