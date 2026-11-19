@@ -1,0 +1,22 @@
+# Tasks
+## 1. Version source and release config (commit `ci(release): add release-please config`)
+- [x] 1.1 Failing test `tests/guards.test.sh::Version has one source`: a `versions <plugin.json> <manifest>` helper (rg, no jq) run on a `mktemp -d` fixture with plugin.json `2.10.0` and manifest `{".": "2.9.0"}` must fail naming both, proves "Hand bump fails the check"
+- [x] 1.2 Same case run on the repo's `.claude-plugin/plugin.json` and `.release-please-manifest.json` passes, proves "Matching versions pass"
+- [x] 1.3 Failing test `tests/guards.test.sh::Release config derives the bump`: `release-please-config.json` has `release-type` `simple`, `package-name` `solo`, an `extra-files` entry `{type: json, path: .claude-plugin/plugin.json, jsonpath: $.version}`, a 40-hex `bootstrap-sha`, and no `release-as`, guards the config for "Feature commit proposes a minor release" (live proof: the first release PR)
+- [x] 1.4 Same case refuses a `changelog-sections` key, so docs/chore/ci/test/refactor stay hidden and release nothing (E14 `base.ts:333`), guards the config for "Docs-only commits propose no release" (live proof: the first release PR)
+- [x] 1.5 Failing test `tests/guards.test.sh::Release tag format`: config has `include-component-in-tag: true` and `tag-separator: "--"`, guards the config for "Release PR merge tags and publishes" (live proof: the first release PR)
+- [x] 1.6 Add `release-please-config.json` (`$schema`, packages `"."` with the keys above, `bootstrap-sha` = `git merge-base origin/main HEAD`, today `9521ccbfad93ca7d5ce3a9515d0caa29ed473a18`) and `.release-please-manifest.json` `{".": "2.9.0"}` (E1, E14); verify: 1.1-1.5 pass
+- [x] 1.7 AGENTS.md `Don't:` line gains "hand-edit `version` in `.claude-plugin/plugin.json` (release-please bumps it)" (E2); verify: `bash tests/guards.test.sh`
+
+## 2. Release workflow (commit `ci(release): add release workflow`)
+- [ ] 2.1 Failing test `tests/guards.test.sh::Release PR gets the required check`: `.github/workflows/release.yml` has top-level `permissions: {}`, `googleapis/release-please-action@<40 hex>`, job permissions exactly `contents`, `pull-requests`, `issues`, `actions` write, a `gh workflow run ci.yml` step whose `--ref` comes from an `env:` value (no `${{` inside `run:`); `ci.yml` has `workflow_dispatch:`; proves "Release PR gets the required check"
+- [ ] 2.2 Add `.github/workflows/release.yml`: on push to `main`, concurrency group `release`, one job `release-please` (ubuntu-24.04, timeout 10) running `googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0`, then when `steps.rp.outputs.prs_created == 'true'` run `gh workflow run ci.yml --repo "$GITHUB_REPOSITORY" --ref "$BRANCH"` with `GH_TOKEN: ${{ github.token }}` and `BRANCH: ${{ fromJSON(steps.rp.outputs.pr).headBranchName }}` (E13, E15); verify: 2.1 passes and actionlint (`ci.yml:27` command) is clean
+- [ ] 2.3 `ci.yml:3-7` add `workflow_dispatch:` to `on:` (E4); verify: actionlint clean
+- [ ] 2.4 README `## Releases` after `## Contributing`: release-please opens the release PR from `feat`/`fix`/`!` commits, merge it with `/solo:pr-ready` step 6, tag `solo--v<version>` plus GitHub release plus `CHANGELOG.md`, never bump `version` by hand, users get it with `claude plugin update solo@diblaze` or marketplace auto-update (E8, E10); verify: `bash tests/guards.test.sh`
+
+## 3. Bootstrap (no commit; each command runs only on the user's yes)
+- [ ] 3.1 Turn on Actions PR creation (E5, E15; see Open Questions): `gh api -X PUT repos/diblaze/solo/actions/permissions/workflow -f default_workflow_permissions=read -F can_approve_pull_request_reviews=true`; verify: `gh api repos/diblaze/solo/actions/permissions/workflow --jq .can_approve_pull_request_reviews` prints `true`
+- [ ] 3.2 `gh release create solo--v2.9.0 --repo diblaze/solo --target <bootstrap-sha> --title "solo 2.9.0" --notes "First tagged release. Earlier history is in git log."`; test proves "Bootstrap release exists": `gh release view solo--v2.9.0 --repo diblaze/solo --json tagName --jq .tagName && git fetch --tags origin && git show solo--v2.9.0:.claude-plugin/plugin.json | rg -F '"version": "2.9.0"'`
+
+## 4. Check
+- [ ] 4.1 `lefthook run pre-push --all-files && docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667 -color && npx -y @anthropic-ai/claude-code@2.1.306 plugin validate --strict .`
