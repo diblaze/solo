@@ -314,7 +314,7 @@ want='exec claude plugin eval "$root" --ablation none --no-publish --max-cost-us
 
 case="Model-calling eval in hooks or CI refused"
 # Everywhere a hook, workflow or plugin hook could live; docs and the suite itself may name the runner.
-hits="$(rg -l --hidden -e 'plugin eval' -e 'run\.sh' -g '!.git/' -g '!evals/' -g '!openspec/' -g '!tests/' -g '!README.md' -g '!AGENTS.md' -g '!skills/**/*.md' -g '!skills/**/*.test.sh' "$P" || true)"
+hits="$(rg -l --hidden -e 'plugin eval' -e 'run\.sh' -g '!.git/' -g '!evals/' -g '!openspec/' -g '!tests/' -g '!README.md' -g '!AGENTS.md' -g '!CHANGELOG.md' -g '!skills/**/*.md' -g '!skills/**/*.test.sh' "$P" || true)"
 [ -z "$hits" ] || fail "may run the eval suite: $hits"
 
 case="Commit guard wired on execute"
@@ -326,5 +326,38 @@ done
 # an if: prefix rule would skip `git -C <dir> commit` and `env X=1 git commit`.
 ! rg -q 'once:|if:' <<<"$ef" || fail "commit guard is one-shot or filtered"
 [ -f "$P/skills/execute/scripts/commit-guard.sh" ] || fail "commit-guard.sh missing"
+
+case="Version has one source"
+# versions <plugin.json> <manifest>: fails naming both when the plugin version is not the release manifest's.
+versions() {
+  local a b
+  a="$(rg -o -r '$1' '"version":\s*"([^"]+)"' "$1" | head -1)"
+  b="$(rg -o -r '$1' '"\."\s*:\s*"([^"]+)"' "$2" | head -1)"
+  [ -n "$a" ] && [ "$a" = "$b" ] || { echo "plugin.json $a, release manifest $b" >&2; return 1; }
+}
+vt="$(mktemp -d)"; trap 'rm -rf "$vt"' EXIT
+printf '{\n  "name": "solo",\n  "version": "2.10.0"\n}\n' >"$vt/plugin.json"
+printf '{".": "2.9.0"}\n' >"$vt/manifest.json"
+out="$(versions "$vt/plugin.json" "$vt/manifest.json" 2>&1)" && fail "hand bump passed"
+has "$out" '2\.10\.0'; has "$out" '2\.9\.0'
+versions "$P/.claude-plugin/plugin.json" "$P/.release-please-manifest.json" || fail "repo versions differ"
+
+case="Release config derives the bump"
+rc="$P/release-please-config.json"
+[ -f "$rc" ] || fail "release-please-config.json missing"
+rcs="$(cat "$rc")"
+has "$rcs" '"release-type":\s*"simple"'
+has "$rcs" '"package-name":\s*"solo"'
+has "$rcs" '"type":\s*"json"'
+has "$rcs" '"path":\s*"\.claude-plugin/plugin\.json"'
+has "$rcs" '"jsonpath":\s*"\$\.version"'
+has "$rcs" '"bootstrap-sha":\s*"[0-9a-f]{40}"'
+! rg -q '"release-as"' <<<"$rcs" || fail "release-as pins the version"
+# Default sections hide docs/chore/ci/test/refactor, so those commits release nothing.
+! rg -q '"changelog-sections"' <<<"$rcs" || fail "changelog-sections would release hidden types"
+
+case="Release tag format"
+has "$rcs" '"include-component-in-tag":\s*true'
+has "$rcs" '"tag-separator":\s*"--"'
 
 echo "guards.test.sh: ok"

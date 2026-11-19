@@ -7,6 +7,7 @@
 - Style: scripts use `set -euo pipefail`, `rg` (never grep) and quoted paths; shared checks live in `skills/plan/scripts/common.sh`.
 - Language: code, commits and docs English.
 - Tracking: GitHub Issues. Issue types `Bug|Feature|Task` on issues, labels `type:bug|feat|chore` on PRs. The last slice commit carries `Refs owner/repo#n`; the spec-fold commit carries `Closes owner/repo#n`.
+- Don't: hand-edit `version` in `.claude-plugin/plugin.json` (release-please bumps it).
 - Don't: commit personal names, domains, hostnames, private IPs or home-directory paths — in files, commit messages, issues or PRs. Exception: the copyright and attribution lines a license requires, in `NOTICE` and the derived file's header.
 
 ## Map
