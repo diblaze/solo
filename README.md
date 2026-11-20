@@ -173,7 +173,8 @@ Install the tools once: `go install github.com/evilmartians/lefthook/v2@v2.2.2`,
 
 [release-please](https://github.com/googleapis/release-please) reads the conventional commits on `main` and keeps one release PR open: `feat` bumps the minor version; `fix`, `perf` or `revert` the patch; a `!` breaking commit the major. `docs`, `chore`, `ci`, `test`, `refactor`, `style`, `build` or any other type alone release nothing, so a dependency bump users must get is a `fix(deps)` commit. The PR bumps `version` in `.claude-plugin/plugin.json`, `.release-please-manifest.json` and `CHANGELOG.md`.
 
-- Merge the release PR like any other, with `/solo:pr-ready` step 6. The merge tags `solo--v<version>`, the format `claude plugin tag` writes and plugin dependency ranges resolve against, and publishes a GitHub release with that version's changelog.
+- GitHub holds the release PR's CI run, because the PR is opened by GitHub Actions. Approve the latest held run, the one on the PR's current head: "Approve and run" on the PR, or find it with `gh run list --repo diblaze/solo --status action_required` and run `gh api -X POST repos/diblaze/solo/actions/runs/<run-id>/approve`. Then wait for `check`. Every push to `main` that updates the release PR holds a new run.
+- Then merge the release PR like any other, with `/solo:pr-ready` step 6. The merge tags `solo--v<version>`, the format `claude plugin tag` writes and plugin dependency ranges resolve against, and publishes a GitHub release with that version's changelog.
 - Never bump `version` by hand: `tests/guards.test.sh` fails when `plugin.json` and the release manifest disagree.
 - Users get the release with `claude plugin update solo@diblaze`, or on the marketplace's auto-update.
 
