@@ -16,7 +16,7 @@ cat >"$stub/openspec" <<'EOF'
 #!/usr/bin/env bash
 echo "$*" >>"$LOG"
 case "${1:-}" in
-  --version) echo "${STUB_V:-1.14.1}" ;;
+  --version) echo "${STUB_V:-2.1.1}" ;;
   init) mkdir -p openspec/changes openspec/specs ;;
   new) mkdir -p "openspec/changes/$3" ;;
   archive) mkdir -p openspec/changes/archive && mv "openspec/changes/$2" "openspec/changes/archive/x-$2" ;;
@@ -367,8 +367,8 @@ rg -q '^validate' "$LOG" || fail "global CLI not used: $(cat "$LOG")"
 newrepo "Mismatched global CLI bypassed"
 mk v draft 'Issue: none' tasks
 STUB_V=9.9.9 fails 0 "$S/validate-change.sh" v
-rg -qF 'npx -y @fission-ai/openspec@1.14.1 validate' "$LOG" || fail "npx not pinned: $(cat "$LOG")"
-rg -qF 9.9.9 "$tmp/err" && rg -qF 1.14.1 "$tmp/err" || fail "note lacks versions: $(cat "$tmp/err")"
+rg -qF 'npx -y @fission-ai/openspec@2.1.1 validate' "$LOG" || fail "npx not pinned: $(cat "$LOG")"
+rg -qF 9.9.9 "$tmp/err" && rg -qF 2.1.1 "$tmp/err" || fail "note lacks versions: $(cat "$tmp/err")"
 
 # No spec tool available
 newrepo "No spec tool available"
