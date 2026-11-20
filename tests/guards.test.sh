@@ -369,8 +369,11 @@ has "$rws" 'uses: googleapis/release-please-action@[0-9a-f]{40}'
 # Job permissions: exactly these four, all write.
 jp="$(awk '/^    permissions:/ {f = 1; next} f && !/^      / {exit} f' "$rw" | sed 's/^ *//' | sort | tr '\n' ' ')"
 [ "$jp" = "actions: write contents: write issues: write pull-requests: write " ] || fail "job permissions: $jp"
-has "$rws" 'gh workflow run ci\.yml .*--ref "\$BRANCH"'
-has "$rws" 'BRANCH: \$\{\{ fromJSON\(steps\.rp\.outputs\.pr\)\.headBranchName \}\}'
+has "$rws" 'branch="\$\(jq -er \.headBranchName <<<"\$PR_JSON"\)"'
+has "$rws" 'gh workflow run ci\.yml .*--ref "\$branch"'
+has "$rws" 'PR_JSON: \$\{\{ steps\.rp\.outputs\.pr \}\}'
+# env is evaluated before if: fromJSON on the empty output of a run without a release PR fails the job.
+! rg -q 'fromJSON' <<<"$rws" || fail "fromJSON in release.yml fails runs without a release PR"
 # Expressions only inside an env: map: one in run: is a script injection.
 bad="$(awk '/^ *env: *$/ {e = match($0, /[^ ]/); next} e && match($0, /[^ ]/) <= e {e = 0} /\$\{\{/ && !e {print NR ": " $0}' "$rw")"
 [ -z "$bad" ] || fail "expression outside env: $bad"

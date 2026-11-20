@@ -27,10 +27,13 @@ jobs:
           manifest-file: .release-please-manifest.json
 
       # A PR opened with GITHUB_TOKEN starts no pull_request workflow; workflow_dispatch is exempt,
-      # so start the required check on the release branch here.
+      # so start the required check on the release branch here. env is evaluated before if, so the
+      # PR JSON (empty without a release PR) is parsed in the step, not in an expression.
       - name: run ci on the release PR
         if: steps.rp.outputs.prs_created == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-          BRANCH: ${{ fromJSON(steps.rp.outputs.pr).headBranchName }}
-        run: gh workflow run ci.yml --repo "$GITHUB_REPOSITORY" --ref "$BRANCH"
+          PR_JSON: ${{ steps.rp.outputs.pr }}
+        run: |
+          branch="$(jq -er .headBranchName <<<"$PR_JSON")"
+          gh workflow run ci.yml --repo "$GITHUB_REPOSITORY" --ref "$branch"
