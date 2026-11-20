@@ -360,23 +360,25 @@ case="Release tag format"
 has "$rcs" '"include-component-in-tag":\s*true'
 has "$rcs" '"tag-separator":\s*"--"'
 
-case="Release PR gets the required check"
+case="Release workflow starts no CI run"
+# GitHub holds the release PR's pull_request CI run until a maintainer approves it; a run the
+# release workflow starts itself does not satisfy the required check, so it starts none.
 rw="$P/.github/workflows/release.yml"
 [ -f "$rw" ] || fail "release.yml missing"
 rws="$(cat "$rw")"
 rg -qx 'permissions: \{\}' <<<"$rws" || fail "release.yml top-level permissions not empty"
 has "$rws" 'uses: googleapis/release-please-action@[0-9a-f]{40}'
-# Job permissions: exactly these four, all write.
+# Job permissions: exactly these three, all write.
 jp="$(awk '/^    permissions:/ {f = 1; next} f && !/^      / {exit} f' "$rw" | sed 's/^ *//' | sort | tr '\n' ' ')"
-[ "$jp" = "actions: write contents: write issues: write pull-requests: write " ] || fail "job permissions: $jp"
-has "$rws" 'branch="\$\(jq -er \.headBranchName <<<"\$PR_JSON"\)"'
-has "$rws" 'gh workflow run ci\.yml .*--ref "\$branch"'
-has "$rws" 'PR_JSON: \$\{\{ steps\.rp\.outputs\.pr \}\}'
-# env is evaluated before if: fromJSON on the empty output of a run without a release PR fails the job.
-! rg -q 'fromJSON' <<<"$rws" || fail "fromJSON in release.yml fails runs without a release PR"
+[ "$jp" = "contents: write issues: write pull-requests: write " ] || fail "job permissions: $jp"
+! rg -q 'gh workflow run|workflow_dispatch' <<<"$rws" || fail "release.yml starts a CI run of its own"
+# Without actions: write the job token cannot dispatch; a secret token could.
+! rg -q 'secrets\.' <<<"$rws" || fail "release.yml uses a secret"
 # Expressions only inside an env: map: one in run: is a script injection.
 bad="$(awk '/^ *env: *$/ {e = match($0, /[^ ]/); next} e && match($0, /[^ ]/) <= e {e = 0} /\$\{\{/ && !e {print NR ": " $0}' "$rw")"
 [ -z "$bad" ] || fail "expression outside env: $bad"
-rg -q '^  workflow_dispatch:' "$P/.github/workflows/ci.yml" || fail "ci.yml lacks workflow_dispatch"
+ci="$P/.github/workflows/ci.yml"
+rg -q '^  pull_request:' "$ci" || fail "ci.yml lacks pull_request"
+! rg -q '^  workflow_dispatch:' "$ci" || fail "ci.yml still has workflow_dispatch"
 
 echo "guards.test.sh: ok"
