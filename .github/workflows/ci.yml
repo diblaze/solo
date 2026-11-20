@@ -49,5 +49,5 @@ jobs:
 
       - name: plugin manifests
         run: |
-          npx -y @anthropic-ai/claude-code@2.1.306 plugin validate --strict .
-          npx -y @anthropic-ai/claude-code@2.1.306 plugin validate --strict .claude-plugin/plugin.json
+          npx -y @anthropic-ai/claude-code@2.1.329 plugin validate --strict .
+          npx -y @anthropic-ai/claude-code@2.1.329 plugin validate --strict .claude-plugin/plugin.json
