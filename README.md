@@ -171,7 +171,7 @@ Install the tools once: `go install github.com/evilmartians/lefthook/v2@v2.2.2`,
 
 ## Releases
 
-[release-please](https://github.com/googleapis/release-please) reads the conventional commits on `main` and keeps one release PR open: `feat` bumps the minor version; `fix`, `perf`, `revert` or `deps` the patch; a `!` breaking commit the major; `docs`, `chore`, `ci`, `test`, `refactor`, `style` or `build` alone release nothing. The PR bumps `version` in `.claude-plugin/plugin.json`, `.release-please-manifest.json` and `CHANGELOG.md`.
+[release-please](https://github.com/googleapis/release-please) reads the conventional commits on `main` and keeps one release PR open: `feat` bumps the minor version; `fix`, `perf` or `revert` the patch; a `!` breaking commit the major. `docs`, `chore`, `ci`, `test`, `refactor`, `style`, `build` or any other type alone release nothing, so a dependency bump users must get is a `fix(deps)` commit. The PR bumps `version` in `.claude-plugin/plugin.json`, `.release-please-manifest.json` and `CHANGELOG.md`.
 
 - Merge the release PR like any other, with `/solo:pr-ready` step 6. The merge tags `solo--v<version>`, the format `claude plugin tag` writes and plugin dependency ranges resolve against, and publishes a GitHub release with that version's changelog.
 - Never bump `version` by hand: `tests/guards.test.sh` fails when `plugin.json` and the release manifest disagree.
