@@ -19,7 +19,7 @@ The system SHALL fail the repository check when the plugin manifest version diff
 - **THEN** the version check passes
 
 ### Requirement: Bump follows the conventional commits
-The system SHALL, on every push to `main`, open or update one release PR whose version is the last release bumped minor for a `feat` commit, patch for a `fix`, `perf`, `revert` or `deps` commit and major for a breaking commit, and SHALL open none when only `docs`, `chore`, `ci`, `test`, `refactor`, `style` or `build` commits landed since the last release.
+The system SHALL, on every push to `main`, open or update one release PR whose version is the last release bumped minor for a `feat` commit, patch for a `fix`, `perf` or `revert` commit and major for a breaking commit, and SHALL open none when only commits of other types, such as `docs`, `chore`, `ci`, `test`, `refactor`, `style`, `build` or `deps`, landed since the last release.
 
 #### Scenario: Feature commit proposes a minor release
 - **GIVEN** last release `2.9.0` and a merged `feat(x): y` commit
