@@ -10,7 +10,7 @@ The OpenSpec change scripts that `/solo:plan` and `/solo:execute` run: create a 
 | common.sh | Shared guard: needs `rg`, moves to the git root, validates slugs and `Issue:` lines; `tracked_clean`, `write` (honours `--dry-run`), `ensure_label` |
 | create-issue.sh | On approval: creates the tracking issue from the proposal unless it names one, then sets `Status: approved`; `--dry-run` prints the writes |
 | new-change.sh | Initialises `openspec/` when missing, creates the change, prints its path |
-| openspec.sh | Runs OpenSpec 1.14.1: the global binary at that version, else `npx` |
+| openspec.sh | Runs OpenSpec 2.1.1: the global binary at that version, else `npx` |
 | read-issue.sh | Prints an issue's JSON, then `collaborator <login>` or `outsider <login>` per author; refuses a malformed argument before calling `gh` |
 | scripts.test.sh | Offline tests with stub `openspec`/`npx` on `PATH` and throwaway repos |
 | set-status.sh | Rewrites `Status:` (and `Issue:`) in `proposal.md`; `done` refuses unticked tasks |

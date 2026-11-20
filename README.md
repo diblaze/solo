@@ -94,7 +94,7 @@ Skills run these instead of retyping CLI commands, so every run does the same th
 
 | Script | Does |
 | --- | --- |
-| `skills/plan/scripts/openspec.sh` | Runs OpenSpec 1.14.1: a global CLI only at that exact version, else `npx -y @fission-ai/openspec@1.14.1`; exit 127 when neither exists |
+| `skills/plan/scripts/openspec.sh` | Runs OpenSpec 2.1.1: a global CLI only at that exact version, else `npx -y @fission-ai/openspec@2.1.1`; exit 127 when neither exists |
 | `skills/plan/scripts/new-change.sh <slug>` | `openspec init` when the repo has none, creates the change, prints its path |
 | `skills/plan/scripts/validate-change.sh <slug>` | Strict validation, `Status:`/`Issue:` checks, every scenario named in quotes by a task |
 | `skills/plan/scripts/read-issue.sh <n\|#n\|url>` | Prints the issue JSON, then `collaborator <login>` or `outsider <login>` per author of the issue and its comments |
@@ -134,7 +134,7 @@ These are hard stops, not style advice: a gate refuses to continue until each on
 
 ## Install
 
-You need `git`, `gh` (signed in), `rg`, and either OpenSpec 1.14.1 (`npm install -g @fission-ai/openspec@1.14.1`) or Node for `npx`. In a Claude Code session:
+You need `git`, `gh` (signed in), `rg`, and either OpenSpec 2.1.1 (`npm install -g @fission-ai/openspec@2.1.1`) or Node 22.20.0 or newer for `npx`. In a Claude Code session:
 
 ```text
 /plugin marketplace add diblaze/solo

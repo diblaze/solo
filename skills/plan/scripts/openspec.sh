@@ -3,7 +3,7 @@
 set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$here/common.sh"
-v=1.14.1
+v=2.1.1
 if command -v openspec >/dev/null 2>&1; then
   g="$(openspec --version 2>/dev/null || true)"
   [ "$g" != "$v" ] || exec openspec "$@"

@@ -34,4 +34,4 @@ One folder per `/solo:*` skill. Each holds a `SKILL.md` (frontmatter `name` and 
 
 ## Dependencies
 - Internal: `agents/` (subagents the skills dispatch), `openspec/` (changes the gate skills read and fold).
-- External: `git`, `gh`, `rg`, OpenSpec 1.14.1 (`skills/plan/scripts/openspec.sh:6`).
+- External: `git`, `gh`, `rg`, OpenSpec 2.1.1 (`skills/plan/scripts/openspec.sh:6`).
