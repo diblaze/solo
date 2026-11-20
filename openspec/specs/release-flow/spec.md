@@ -40,12 +40,17 @@ The system SHALL, when the release PR merges, create tag `solo--v<version>` on t
 - **THEN** tag `solo--v2.10.0` points at a commit whose plugin manifest says `2.10.0` and a GitHub release `solo--v2.10.0` exists
 
 ### Requirement: Release PR runs the required check
-The system SHALL run the required `check` job on the release PR head every time the release workflow opens or updates it.
+The system SHALL run the required `check` job on the release PR head once a maintainer approves the workflow run that GitHub holds for that PR, and SHALL start no other CI run for it.
 
 #### Scenario: Release PR gets the required check
+- **GIVEN** the release workflow just opened or updated the release PR and its CI run waits for approval
+- **WHEN** a maintainer approves that run and its checks are listed
+- **THEN** a `check` run exists for the PR head commit and the PR can merge once it passes
+
+#### Scenario: Unapproved release PR stays blocked
 - **GIVEN** the release workflow just opened or updated the release PR
-- **WHEN** its checks are listed
-- **THEN** a `check` run exists for the PR head commit
+- **WHEN** nobody approves the waiting CI run
+- **THEN** the release workflow has started no CI run of its own and the PR cannot merge
 
 ### Requirement: First release is 2.9.0
 The system SHALL have release `solo--v2.9.0` on the last `main` commit before this change, and SHALL compute the first proposed release only from commits after it.
